@@ -1,9 +1,12 @@
 package com.pomodoro.timer.database
 
+import androidx.room.ProvidedTypeConverter
 import androidx.room.TypeConverter
+import javax.inject.Inject
 
 
-class ImageTypeConverter {
+@ProvidedTypeConverter
+class ImageTypeConverter @Inject constructor(){
     @TypeConverter
     fun fromString(value: String): List<String> {
         return if (value.isBlank()) emptyList()
