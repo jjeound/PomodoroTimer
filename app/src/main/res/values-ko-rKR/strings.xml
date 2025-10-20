@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PomodoroTimer</string>
+    <string name="reset">재설정</string>
+    <string name="start">시작</string>
+    <string name="stop">중지</string>
+    <string name="resume">재게</string>
+    <string name="cancel">취소</string>
+    <string name="done">완료</string>
+    <string name="color">색상</string>
+    <string name="font">폰트</string>
+    <string name="timer">타이머</string>
+    <string name="break_time">쉬는 시간</string>
+    <string name="repeat">반복</string>
+    <string name="hours">시</string>
+    <string name="minutes">분</string>
+    <string name="seconds">초</string>
+    <string name="expire_mode">만료 모드</string>
+    <string name="start_sound">시작 음성</string>
+    <string name="restart_sound">재시작 음성</string>
+    <string name="background_color">배경 색상</string>
+    <string name="type">타입</string>
+    <string name="pause">중단</string>
+</resources>
