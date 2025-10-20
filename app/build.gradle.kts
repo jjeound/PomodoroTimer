@@ -2,10 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("kotlin-kapt")
     alias(libs.plugins.ksp)
     alias(libs.plugins.dagger.hilt)
-    kotlin("plugin.serialization") version "2.1.21"
+    kotlin("plugin.serialization") version "2.2.20"
 }
 
 android {
@@ -35,19 +34,30 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        compilerOptions {
+            freeCompilerArgs.add("-Xcontext-receivers")
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+            freeCompilerArgs.add("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
+        }
     }
     buildFeatures {
         compose = true
     }
+    hilt {
+        enableAggregatingTask = true
+    }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {
 
     // Hilt
     implementation (libs.hilt.android)
-    kapt (libs.hilt.compiler)
+    ksp (libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
     // ViewModel
@@ -75,6 +85,9 @@ dependencies {
     implementation (libs.androidx.room.paging)
     implementation (libs.androidx.datastore.preferences)
 
+    // Compose
+    implementation(libs.androidx.material3.window.size.class1)
+    implementation(libs.androidx.material3.adaptive.navigation.suite)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
