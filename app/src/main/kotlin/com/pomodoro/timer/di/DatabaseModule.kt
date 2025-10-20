@@ -9,6 +9,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.serialization.json.Json
 import javax.inject.Singleton
 
 @Module
@@ -19,11 +20,9 @@ object DatabaseModule {
     @Singleton
     fun provideAppDatabase(
         application: Application,
-        imageTypeConverter: ImageTypeConverter
     ): PomodoroDatabase {
         return Room
             .databaseBuilder(application, PomodoroDatabase::class.java, "PomodoroTimer.db")
-            .addTypeConverter(imageTypeConverter)
             .build()
     }
 
