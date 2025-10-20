@@ -24,7 +24,7 @@ data class CustomTypography(
     val caption2: TextStyle
 )
 
-internal val fontFamily = FontFamily(
+val fontFamily = FontFamily(
     Font(R.font.pretendard_black, FontWeight.Black),
     Font(R.font.pretendard_bold, FontWeight.Bold),
     Font(R.font.pretendard_extrabold, FontWeight.ExtraBold),
@@ -36,7 +36,7 @@ internal val fontFamily = FontFamily(
     Font(R.font.pretendard_extralight, FontWeight.ExtraLight),
 )
 
-internal val customTypography =  CustomTypography(
+val customTypography =  CustomTypography(
     headline1 = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.ExtraBold, fontSize = 32.sp),
     headline2 = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.ExtraBold, fontSize = 24.sp),
     headline3 = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp),
@@ -45,7 +45,7 @@ internal val customTypography =  CustomTypography(
     body1 = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = 16.sp),
     body2 = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = 14.sp),
     body3 = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = 12.sp),
-    button1 = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Bold, fontSize = 16.sp),
+    button1 = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Light, fontSize = 30.sp),
     button2 = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Medium, fontSize = 13.sp),
     caption1 = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = 12.sp),
     caption2 = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = 10.sp)
