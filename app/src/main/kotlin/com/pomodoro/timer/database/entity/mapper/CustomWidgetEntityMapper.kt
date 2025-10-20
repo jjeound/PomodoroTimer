@@ -17,18 +17,22 @@ object CustomWidgetEntityMapper : EntityMapper<CustomWidget, CustomWidgetEntity>
     val backgroundJson = domain.backgroundImage?.let { gson.toJson(it) }
 
     return CustomWidgetEntity(
-      fontSize = domain.fontStyle?.fontSize?.value,
-      fontWeight = domain.fontStyle?.fontWeight?.weight,
-      fontColor = domain.fontStyle?.color?.value?.toLong(),
+      fontSize = domain.fontStyle.fontSize.value,
+      fontWeight = domain.fontStyle.fontWeight!!.weight,
+      fontColor = domain.fontColor.value.toLong(),
       backgroundImage = backgroundJson,
       mode = domain.mode,
       hour = domain.hour,
       minute = domain.minute,
       second = domain.second,
       interval = domain.interval,
-      sound = domain.sound,
-      vibration = domain.vibration,
-      repeat = domain.repeat
+      breakTime = domain.breakTime,
+      startSound = domain.startSound,
+      restartSound = domain.restartSound,
+      expireMode = domain.expireMode,
+      repeat = domain.repeat,
+      fgColor = domain.fgColor.value.toLong(),
+      bgColor = domain.bgColor.value.toLong()
     )
   }
 
@@ -36,15 +40,14 @@ object CustomWidgetEntityMapper : EntityMapper<CustomWidget, CustomWidgetEntity>
     val backgroundList: List<String>? = entity.backgroundImage?.let {
       gson.fromJson(it, object : TypeToken<List<String>>() {}.type)
     }
-    val textStyle = if (entity.fontSize != null && entity.fontWeight != null && entity.fontColor != null) {
-      TextStyle(
-        fontSize = entity.fontSize.sp,
-        fontWeight = FontWeight(entity.fontWeight),
-        color = Color(entity.fontColor.toULong())
-      )
-    } else null
+    val textStyle = TextStyle(
+      fontSize = entity.fontSize.sp,
+      fontWeight = FontWeight(entity.fontWeight),
+      color = Color(entity.fontColor.toULong())
+    )
 
     return CustomWidget(
+      id = entity.id,
       fontStyle = textStyle,
       backgroundImage = backgroundList,
       mode = entity.mode,
@@ -52,9 +55,13 @@ object CustomWidgetEntityMapper : EntityMapper<CustomWidget, CustomWidgetEntity>
       minute = entity.minute,
       second = entity.second,
       interval = entity.interval,
-      sound = entity.sound,
-      vibration = entity.vibration,
-      repeat = entity.repeat
+      breakTime = entity.breakTime,
+      startSound = entity.startSound,
+      restartSound = entity.restartSound,
+      expireMode = entity.expireMode,
+      repeat = entity.repeat,
+      fgColor = Color(entity.fgColor),
+      bgColor = Color(entity.bgColor)
     )
   }
 }
