@@ -6,7 +6,7 @@ import com.pomodoro.timer.ui.theme.customTypography
 
 data class CustomWidget(
     val id: Long = 0L,
-    val fontStyle: TextStyle = customTypography.title1,
+    val fontStyle: TextStyle = customTypography.buttonTimerSmall,
     val backgroundImage: List<String>? = null,
     val mode: Int = 0, // 0: 시계 형, 1: 디지털 형, 2: 탁상 형
     val hour: Int = 1,
