@@ -1,11 +1,11 @@
 package com.pomodoro.timer.presentation.pomodoro
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,23 +16,26 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.pomodoro.timer.CustomWidget
@@ -47,12 +50,14 @@ import kotlin.math.sin
 fun PomodoroTimer(
     modifier: Modifier,
     widget: CustomWidget,
+    editMode: Boolean,
+    onEditText: () -> Unit,
+    onEditContainer: () -> Unit,
     viewModel: PomodoroViewModel = hiltViewModel()
 ){
     viewModel.setRP(widget.repeat)
     viewModel.setBT(widget.breakTime)
     val remainingTime by remember { derivedStateOf { viewModel.remainingTime } }
-    val isRunning by remember { derivedStateOf { viewModel.isRunning } }
     val state by remember { derivedStateOf { viewModel.state } }
     val minutesTxt = when(widget.interval){
         5 -> {
@@ -68,6 +73,11 @@ fun PomodoroTimer(
             listOf("0", "5", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55")
         }
     }
+    LaunchedEffect(editMode) {
+        if(editMode && state == TimerState.RUNNING){
+            viewModel.onPause()
+        }
+    }
     PomodoroTimerContent(
         modifier = modifier,
         widget = widget,
@@ -78,10 +88,12 @@ fun PomodoroTimer(
         onPause = viewModel::onPause,
         onReset = viewModel::onReset,
         onResume = viewModel::onResume,
+        onEditText = onEditText,
+        onEditContainer = onEditContainer,
+        editMode = editMode,
     )
 }
 
-@SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 fun PomodoroTimerContent(
     modifier: Modifier = Modifier,
@@ -93,22 +105,43 @@ fun PomodoroTimerContent(
     onPause: () -> Unit = {},
     onReset: () -> Unit = {},
     onResume: () -> Unit = {},
+    onEditText: () -> Unit = {},
+    onEditContainer: () -> Unit = {},
+    editMode: Boolean = false,
 ){
-    val currentWidthDp = LocalConfiguration.current.screenWidthDp.dp
-    Box(
-        modifier = modifier.padding(20.dp)
-    ){
-        Timer(
-            text = minutesTxt,
-            radius = currentWidthDp / 2,
-            textStyle = widget.fontStyle,
-            color = widget.fgColor,
-            fontColor = widget.fontStyle.color,
-            images = widget.backgroundImage,
-            remainingTime = remainingTime
+    val windowInfo = LocalWindowInfo.current
+    val screenSize = with(LocalDensity.current) {
+        DpSize(
+            width = windowInfo.containerSize.width.toDp(),
+            height = windowInfo.containerSize.height.toDp()
         )
+    }
+    val isLandscape = screenSize.width > screenSize.height
+    val radius = (if (isLandscape) screenSize.height else screenSize.width) / 2 * 0.8f
+    Box(modifier = modifier){
         Box(
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier.align(Alignment.Center).border(
+                width = 3.dp,
+                color = if(editMode) CustomTheme.colors.indicatorBox else Color.Transparent,
+                shape = RoundedCornerShape(12.dp)
+            )
+        ){
+            Timer(
+                text = minutesTxt,
+                radius = radius,
+                textStyle = widget.fontStyle,
+                color = widget.fgColor,
+                bgColor = widget.bgColor,
+                fontColor = widget.fontStyle.color,
+                images = widget.backgroundImage,
+                remainingTime = remainingTime,
+                editMode = editMode,
+                onEditText = onEditText,
+                onEditContainer = onEditContainer,
+            )
+        }
+        Box(
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp)
         ){
             TimerButtons(
                 state = state,
@@ -128,16 +161,20 @@ fun Timer(
     textStyle: TextStyle,
     color: Color,
     fontColor: Color,
+    bgColor: Color,
     images: List<String>?,
     remainingTime: Int = 0,
+    editMode: Boolean,
+    onEditText: () -> Unit = {},
+    onEditContainer: () -> Unit = {},
 ) {
     val context = LocalDensity.current
     Box(
-        modifier = Modifier.size(radius * 2),
+        modifier = Modifier.padding(20.dp),
         contentAlignment = Alignment.Center
     ) {
         val angleStep = 360f / text.size
-        text.forEachIndexed { index, char ->
+        text.forEachIndexed { index, str ->
             val angle = angleStep * index
             Box(
                 modifier = Modifier
@@ -146,16 +183,28 @@ fun Timer(
                         translationX = radius.toPx() * cos(Math.toRadians(angle.toDouble())).toFloat()
                         translationY = radius.toPx() * sin(Math.toRadians(angle.toDouble())).toFloat()
                         rotationZ = angle
-                    }
+                    }.then(
+                        if (str == "0" && editMode) {
+                            Modifier.border(
+                                width = 3.dp,
+                                color = CustomTheme.colors.indicatorBox,
+                                shape = RoundedCornerShape(12.dp)
+                            ).clickable(
+                                onClick = onEditText
+                            )
+                        } else {
+                            Modifier
+                        }
+                    )
             ) {
                 Text(
-                    text = char,
+                    text = str,
                     style = textStyle,
                     color = fontColor,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.graphicsLayer {
                         rotationZ = -angle // 글자를 수평으로 유지
-                    }
+                    }.size(40.dp)
                 )
             }
         }
@@ -195,11 +244,23 @@ fun Timer(
             }
         }
         val sweepAngle = (remainingTime / 3600f) * 360f
-        Canvas(modifier = Modifier.size(radiusForDot * 2)) {
+        Canvas(
+            modifier = Modifier.size(radiusForDot * 2)
+                .clickable(
+                    enabled = editMode,
+                    onClick = onEditContainer
+                )
+        ) {
+            drawArc(
+                color = bgColor,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = true,
+            )
             drawArc(
                 color = color,
                 startAngle = -90f,
-                sweepAngle = sweepAngle,
+                sweepAngle = if(editMode) -270f else sweepAngle,
                 useCenter = true,
             )
         }
@@ -209,6 +270,11 @@ fun Timer(
                 modifier = Modifier.size(radiusForDot * 2)
             )
         }
+        Icon(
+            imageVector = ImageVector.vectorResource(R.drawable.needle),
+            contentDescription = null,
+            modifier = Modifier.align(Alignment.Center).rotate(sweepAngle)
+        )
     }
 }
 
@@ -226,15 +292,15 @@ fun TimerButtons(
     ) {
         OutlinedButton(
             onClick = onReset,
-            border = BorderStroke(1.dp, CustomTheme.colors.buttonBorderFocused),
+            border = BorderStroke(1.dp, CustomTheme.colors.buttonBorder),
             modifier = Modifier
                 .padding(vertical = 5.dp, horizontal = 10.dp)
                 .clip(RoundedCornerShape(12.dp))
         ) {
             Text(
                 text = stringResource(id = R.string.reset),
-                color = CustomTheme.colors.textPrimary,
-                style = CustomTheme.typography.button1
+                color = CustomTheme.colors.text,
+                style = CustomTheme.typography.buttonTimerSmall
             )
         }
         OutlinedButton(
@@ -245,7 +311,7 @@ fun TimerButtons(
                     TimerState.PAUSED -> onResume()
                 }
             },
-            border = BorderStroke(1.dp, CustomTheme.colors.buttonBorderFocused),
+            border = BorderStroke(1.dp, CustomTheme.colors.buttonBorder),
             modifier = Modifier
                 .padding(vertical = 5.dp, horizontal = 10.dp)
                 .clip(RoundedCornerShape(12.dp))
@@ -253,32 +319,32 @@ fun TimerButtons(
             when(state){
                 TimerState.IDLE -> Text(
                     text = stringResource(id = R.string.start),
-                    color = CustomTheme.colors.textPrimary,
-                    style = CustomTheme.typography.button1
+                    color = CustomTheme.colors.text,
+                    style = CustomTheme.typography.buttonTimerSmall
                 )
                 TimerState.RUNNING -> Text(
                     text = stringResource(id = R.string.pause),
-                    color = CustomTheme.colors.textPrimary,
-                    style = CustomTheme.typography.button1
+                    color = CustomTheme.colors.text,
+                    style = CustomTheme.typography.buttonTimerSmall
                 )
                 TimerState.PAUSED -> Text(
                     text = stringResource(id = R.string.resume),
-                    color = CustomTheme.colors.textPrimary,
-                    style = CustomTheme.typography.button1
+                    color = CustomTheme.colors.text,
+                    style = CustomTheme.typography.buttonTimerSmall
                 )
             }
         }
     }
 }
 
-@Preview
+@Preview()
 @Composable
 fun PomodoroTimerContentPreview() {
     MyTheme {
         PomodoroTimerContent(
             widget = CustomWidget(),
             minutesTxt = listOf("15", "20", "25", "30", "35", "40", "45", "50", "55", "0", "5", "10"),
-
+            editMode = true
         )
     }
 }

@@ -4,22 +4,16 @@ import android.util.Log
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pomodoro.timer.CustomWidget
 import com.pomodoro.timer.data.MainRepository
-import com.pomodoro.timer.ui.theme.customTypography
-import com.pomodoro.timer.ui.theme.fontFamily
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.Long
@@ -33,6 +27,9 @@ class MainViewModel @Inject constructor(
 
     private val _widgets: MutableStateFlow<List<CustomWidget>> = MutableStateFlow(emptyList())
     val widgets = _widgets.asStateFlow()
+
+    private val _currentWidget: MutableStateFlow<CustomWidget> = MutableStateFlow(CustomWidget())
+    val currentWidget = _currentWidget.asStateFlow()
 
     var mode by mutableIntStateOf(0)
         private set
@@ -53,8 +50,25 @@ class MainViewModel @Inject constructor(
                 _widgets.value = it ?: listOf(
                     CustomWidget()
                 )
+                _currentWidget.value = _widgets.value.first()
             }
         }
+    }
+
+    fun setCurrentWidget(widget: CustomWidget){
+        _currentWidget.value = widget
+    }
+
+    fun editContainerColor(color: Color){
+        _currentWidget.value = _currentWidget.value.copy(
+            fgColor = color
+        )
+    }
+
+    fun editBgColor(color: Color){
+        _currentWidget.value = _currentWidget.value.copy(
+            bgColor = color
+        )
     }
 
     fun saveWidget(widget: CustomWidget){

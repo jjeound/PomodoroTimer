@@ -18,14 +18,13 @@ class PomodoroViewModel @Inject constructor(
 ): ViewModel() {
     var remainingTime by mutableIntStateOf(60 * 60)
         private set
-    var isRunning by mutableStateOf(false)
-        private set
     var state by mutableStateOf(TimerState.IDLE)
         private set
     var breakTime by mutableIntStateOf(5 * 60)
         private set
     var repeat by mutableIntStateOf(5)
         private set
+    private var isRunning by mutableStateOf(false)
 
     fun setBT(seconds: Int) {
         breakTime = seconds
