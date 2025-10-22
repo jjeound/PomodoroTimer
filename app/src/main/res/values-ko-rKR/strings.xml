@@ -21,4 +21,5 @@
     <string name="background_color">배경 색상</string>
     <string name="type">타입</string>
     <string name="pause">중단</string>
+    <string name="gap">간격</string>
 </resources>
