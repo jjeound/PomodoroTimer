@@ -3,13 +3,11 @@ package com.pomodoro.timer.di
 import android.app.Application
 import androidx.room.Room
 import com.pomodoro.timer.database.CustomWidgetDao
-import com.pomodoro.timer.database.ImageTypeConverter
 import com.pomodoro.timer.database.PomodoroDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.serialization.json.Json
 import javax.inject.Singleton
 
 @Module
