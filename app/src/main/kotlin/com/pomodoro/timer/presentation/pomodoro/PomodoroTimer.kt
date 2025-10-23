@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
@@ -59,15 +60,15 @@ fun PomodoroTimer(
     viewModel.setBT(widget.breakTime)
     val remainingTime by remember { derivedStateOf { viewModel.remainingTime } }
     val state by remember { derivedStateOf { viewModel.state } }
-    val minutesTxt = when(widget.interval){
+    val minutesTxt = when(widget.gap){
         5 -> {
             listOf("15", "20", "25", "30", "35", "40", "45", "50", "55", "0", "5", "10")
         }
         10 -> {
-            listOf("0", "10", "20", "30", "40", "50")
+            listOf("", "20", "", "30", "", "40", "", "50", "", "0", "", "10")
         }
         15 -> {
-            listOf("0", "15", "30", "45")
+            listOf("15", "", "", "30", "", "", "45", "", "", "0", "", "")
         }
         else -> {
             listOf("0", "5", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55")
@@ -132,7 +133,7 @@ fun PomodoroTimerContent(
                 textStyle = widget.fontStyle,
                 color = widget.fgColor,
                 bgColor = widget.bgColor,
-                fontColor = widget.fontStyle.color,
+                fontColor = widget.fontColor,
                 images = widget.backgroundImage,
                 remainingTime = remainingTime,
                 editMode = editMode,
@@ -140,16 +141,18 @@ fun PomodoroTimerContent(
                 onEditContainer = onEditContainer,
             )
         }
-        Box(
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp)
-        ){
-            TimerButtons(
-                state = state,
-                onStart = onStart,
-                onPause = onPause,
-                onReset = onReset,
-                onResume = onResume,
-            )
+        if(!editMode){
+            Box(
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp)
+            ){
+                TimerButtons(
+                    state = state,
+                    onStart = onStart,
+                    onPause = onPause,
+                    onReset = onReset,
+                    onResume = onResume,
+                )
+            }
         }
     }
 }
@@ -179,6 +182,7 @@ fun Timer(
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
+                    .wrapContentSize()
                     .graphicsLayer {
                         translationX = radius.toPx() * cos(Math.toRadians(angle.toDouble())).toFloat()
                         translationY = radius.toPx() * sin(Math.toRadians(angle.toDouble())).toFloat()
