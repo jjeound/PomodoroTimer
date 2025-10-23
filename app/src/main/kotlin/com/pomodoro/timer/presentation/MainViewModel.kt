@@ -5,7 +5,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pomodoro.timer.CustomWidget
@@ -28,8 +27,14 @@ class MainViewModel @Inject constructor(
     private val _widgets: MutableStateFlow<List<CustomWidget>> = MutableStateFlow(emptyList())
     val widgets = _widgets.asStateFlow()
 
+    private val _widgetsByMode: MutableStateFlow<List<CustomWidget>> = MutableStateFlow(emptyList())
+    val widgetsByMode = _widgetsByMode.asStateFlow()
+
     private val _currentWidget: MutableStateFlow<CustomWidget> = MutableStateFlow(CustomWidget())
     val currentWidget = _currentWidget.asStateFlow()
+
+    private val _editingWidget: MutableStateFlow<CustomWidget> = MutableStateFlow(CustomWidget())
+    val editingWidget = _editingWidget.asStateFlow()
 
     var mode by mutableIntStateOf(0)
         private set
@@ -50,25 +55,42 @@ class MainViewModel @Inject constructor(
                 _widgets.value = it ?: listOf(
                     CustomWidget()
                 )
-                _currentWidget.value = _widgets.value.first()
+                _widgetsByMode.value = _widgets.value.filter { widget ->
+                    widget.mode == mode
+                }
+                _currentWidget.value = _widgetsByMode.value.first()
+                _editingWidget.value = _currentWidget.value
             }
         }
     }
 
-    fun setCurrentWidget(widget: CustomWidget){
-        _currentWidget.value = widget
+    fun editWidget(
+        widget: CustomWidget
+    ){
+        _editingWidget.value = widget
     }
 
-    fun editContainerColor(color: Color){
-        _currentWidget.value = _currentWidget.value.copy(
-            fgColor = color
-        )
+    fun onCancelEdit(){
+        _editingWidget.value = _currentWidget.value
     }
 
-    fun editBgColor(color: Color){
-        _currentWidget.value = _currentWidget.value.copy(
-            bgColor = color
+    fun onDoneEdit(){
+        if(_editingWidget.value.id != 0L)
+            updateWidget(_editingWidget.value)
+        else saveWidget(_editingWidget.value)
+        _currentWidget.value = _editingWidget.value
+    }
+
+    fun onAddNewWidget(){
+        _widgetsByMode.value += CustomWidget(
+            mode = this.mode
         )
+        _editingWidget.value = _widgetsByMode.value.last()
+    }
+
+    fun onNextWidget(index: Int){
+        _currentWidget.value = _widgetsByMode.value[index]
+        _editingWidget.value = _currentWidget.value
     }
 
     fun saveWidget(widget: CustomWidget){
@@ -108,10 +130,6 @@ class MainViewModel @Inject constructor(
                 }
             ).collect()
         }
-    }
-
-    fun changeMode(mode: Int){
-        this.mode = mode
     }
 }
 

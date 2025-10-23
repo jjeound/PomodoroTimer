@@ -5,6 +5,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,6 +19,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,10 +32,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -54,8 +59,9 @@ fun MainScreen(
 ) {
     var editMode by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val widgets by viewModel.widgets.collectAsStateWithLifecycle()
     val currentWidget by viewModel.currentWidget.collectAsStateWithLifecycle()
+    val editingWidget by viewModel.editingWidget.collectAsStateWithLifecycle()
+    val widgetsByMode by viewModel.widgetsByMode.collectAsStateWithLifecycle()
     val mode = viewModel.mode
     val config = LocalConfiguration.current
     val isTablet = config.smallestScreenWidthDp >= 600
@@ -78,15 +84,18 @@ fun MainScreen(
 //                )
             } else {
                 MainScreenContentPhone(
-                    widgets = widgets,
+                    widgets = widgetsByMode,
                     editMode = editMode,
                     onEditModeChange = { editMode = it },
                     mode = mode,
                     editable = editable,
-                    setCurrentWidget = viewModel::setCurrentWidget,
                     currentWidget = currentWidget,
-                    editContainerColor = viewModel::editContainerColor,
-                    editBgColor = viewModel::editBgColor,
+                    editingWidget = editingWidget,
+                    editWidget = viewModel::editWidget,
+                    onCancelEdit = viewModel::onCancelEdit,
+                    onDoneEdit = viewModel::onDoneEdit,
+                    onAddNewWidget = viewModel::onAddNewWidget,
+                    onNextWidget = viewModel::onNextWidget
                 )
             }
         }
@@ -100,30 +109,39 @@ fun MainScreenContentPhone(
     onEditModeChange: (Boolean) -> Unit,
     mode: Int,
     editable: Boolean,
-    setCurrentWidget: (CustomWidget) -> Unit = {},
     currentWidget: CustomWidget,
-    editContainerColor: (Color) -> Unit = {},
-    editBgColor: (Color) -> Unit = {},
+    editingWidget: CustomWidget,
+    editWidget: (CustomWidget) -> Unit,
+    onCancelEdit: () -> Unit,
+    onDoneEdit: () -> Unit,
+    onAddNewWidget: () -> Unit = {},
+    onNextWidget: (Int) -> Unit
 ) {
     Log.d("widgets", widgets.toString())
     val context = LocalContext.current
-    val pagerState = rememberPagerState(pageCount = {
-        widgets.filter {
-            it.mode == mode
-        }.size
+    val pagerState = rememberPagerState(
+        initialPage = widgets.indexOf(currentWidget),
+        pageCount = {
+        widgets.size
     })
     var showTextEditBottomSheet by remember { mutableStateOf(false) }
     var showContainerEditBottomSheet by remember { mutableStateOf(false) }
+    LaunchedEffect(widgets.size) {
+        if(widgets.isNotEmpty()) pagerState.animateScrollToPage(widgets.lastIndex)
+    }
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
-        if (editMode){
+        if (editMode && !showTextEditBottomSheet && !showContainerEditBottomSheet) {
             Row(
                 modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter).zIndex(1f),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 OutlinedButton(
-                    onClick = { onEditModeChange(false) },
+                    onClick = {
+                        onEditModeChange(false)
+                        onCancelEdit()
+                    },
                     modifier = Modifier
                         .padding(16.dp)
                         .clip(RoundedCornerShape(50)),
@@ -136,7 +154,10 @@ fun MainScreenContentPhone(
                     )
                 }
                 OutlinedButton(
-                    onClick = { onEditModeChange(false) },
+                    onClick = {
+                        onEditModeChange(false)
+                        onDoneEdit()
+                    },
                     modifier = Modifier
                         .padding(16.dp)
                         .clip(RoundedCornerShape(50)),
@@ -162,28 +183,28 @@ fun MainScreenContentPhone(
                 },
                 onClick = {}
             ).align(Alignment.Center),
-            state = pagerState
+            state = pagerState,
+            userScrollEnabled = editMode
         ) { page ->
             LaunchedEffect(page) {
-                setCurrentWidget(widgets[page])
+                onNextWidget(page)
             }
-            when(mode){
-                0 -> {
-                    PomodoroTimer(
-                        modifier = Modifier.fillMaxSize(),
-                        widget = currentWidget,
-                        editMode = editMode,
-                        onEditText = {
-                            showTextEditBottomSheet = true
-                        },
-                        onEditContainer = {
-                            showContainerEditBottomSheet = true
-                        }
-                    )
+            PomodoroTimer(
+                modifier = Modifier.fillMaxSize(),
+                widget = if(editMode) editingWidget else currentWidget,
+                editMode = editMode,
+                onEditText = {
+                    showTextEditBottomSheet = true
+                },
+                onEditContainer = {
+                    showContainerEditBottomSheet = true
                 }
-                1 -> {}
-                2 -> {}
-            }
+            )
+//            when(mode){
+//                0 -> {}
+//                1 -> {}
+//                2 -> {}
+//            }
         }
         if (editMode) {
             Row(
@@ -205,6 +226,27 @@ fun MainScreenContentPhone(
                     )
                 }
             }
+            Box(
+                modifier = Modifier.padding(40.dp)
+                    .border(
+                        width = 1.dp,
+                        color = CustomTheme.colors.buttonBorder,
+                        shape = CircleShape
+                    ).align(Alignment.BottomEnd)
+                    .clickable(
+                        onClick = {
+                            onAddNewWidget()
+                        }
+                    ),
+                contentAlignment = Alignment.Center
+            ){
+                Icon(
+                    modifier = Modifier.size(50.dp).padding(8.dp),
+                    imageVector = ImageVector.vectorResource(R.drawable.plus),
+                    contentDescription = null,
+                    tint = Color.Unspecified
+                )
+            }
         }
         if(showContainerEditBottomSheet){
             ContainerEditBottomSheet(
@@ -212,10 +254,18 @@ fun MainScreenContentPhone(
                     showContainerEditBottomSheet = false
                 },
                 onColorClick = { color ->
-                    editContainerColor(color)
+                    editWidget(
+                        editingWidget.copy(
+                            fgColor = color
+                        )
+                    )
                 },
                 onBackgroundColorClick = { color ->
-                    editBgColor(color)
+                    editWidget(
+                        editingWidget.copy(
+                            bgColor = color
+                        )
+                    )
                 },
                 onPlusClick = {}
             )
@@ -227,15 +277,68 @@ fun MainScreenContentPhone(
                         onDismissRequest = {
                             showTextEditBottomSheet = false
                         },
-                        onColorClick = {},
-                        onFontClick = {},
-                        onPlusClick = {},
-                        onClickGap = {},
-                        onEnterBreakTime = {},
-                        onEnterRepeat = {},
-                        onClickExpireMode = {},
-                        onClickStartSound = {},
-                        onClickRestartSound = {}
+                        onColorClick = {
+                            editWidget(
+                                editingWidget.copy(
+                                    fontColor = it
+                                )
+                            )
+                        },
+                        onFontClick = {
+                            editWidget(
+                                editingWidget.copy(
+                                    fontStyle = it
+                                )
+                            )
+                        },
+                        gap = editingWidget.gap,
+                        onClickGap = {
+                            editWidget(
+                                editingWidget.copy(
+                                    gap = it
+                                )
+                            )
+                        },
+                        breakTime = editingWidget.breakTime,
+                        onChangeBreakTime = {
+                            editWidget(
+                                editingWidget.copy(
+                                    breakTime = it
+                                )
+                            )
+                        },
+                        repeat = editingWidget.repeat,
+                        onChangeRepeat = {
+                            editWidget(
+                                editingWidget.copy(
+                                    repeat = it
+                                )
+                            )
+                        },
+                        expireMode = editingWidget.expireMode,
+                        onClickExpireMode = {
+                            editWidget(
+                                editingWidget.copy(
+                                    expireMode = it
+                                )
+                            )
+                        },
+                        startSound = editingWidget.startSound,
+                        onClickStartSound = {
+                            editWidget(
+                                editingWidget.copy(
+                                    startSound = it
+                                )
+                            )
+                        },
+                        restartSound = editingWidget.restartSound,
+                        onClickRestartSound = {
+                            editWidget(
+                                editingWidget.copy(
+                                    restartSound = it
+                                )
+                            )
+                        }
                     )
                 }
             }
@@ -289,6 +392,11 @@ fun MainScreenContentTabletPreview(){
             mode = 0,
             editable = true,
             currentWidget = CustomWidget(),
+            editingWidget = CustomWidget(),
+            editWidget = {},
+            onCancelEdit = {},
+            onDoneEdit = {},
+            onNextWidget = {}
         )
     }
 }
