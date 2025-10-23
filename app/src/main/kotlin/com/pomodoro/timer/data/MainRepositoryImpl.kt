@@ -87,7 +87,7 @@ class MainRepositoryImpl @Inject constructor(
             entity.hour,
             entity.minute,
             entity.second,
-            entity.interval,
+            entity.gap,
             entity.breakTime,
             entity.startSound,
             entity.restartSound,
