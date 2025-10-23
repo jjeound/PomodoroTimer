@@ -2,6 +2,7 @@ package com.pomodoro.timer
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import com.pomodoro.timer.presentation.common.ExpireMode
 import com.pomodoro.timer.ui.theme.customTypography
 
 data class CustomWidget(
@@ -12,11 +13,11 @@ data class CustomWidget(
     val hour: Int = 1,
     val minute: Int = 0,
     val second: Int = 0,
-    val interval: Int = 5,
+    val gap: Int = 5,
     val breakTime: Int = 5,
     val startSound: String = "default",
     val restartSound: String = "default",
-    val expireMode: Int = 0,
+    val expireMode: ExpireMode = ExpireMode.NO_SOUND,
     val repeat: Int = 0,
     val fontColor: Color = Color(0xFF000000),
     val fgColor: Color = Color(0xFFF8384C),
