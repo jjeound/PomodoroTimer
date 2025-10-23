@@ -21,4 +21,7 @@
     <string name="type">Type</string>
     <string name="pause">PAUSE</string>
     <string name="gap">Gap</string>
+    <string name="no_sound">No Sound</string>
+    <string name="vibrate">Vibrate</string>
+    <string name="sound">Sound</string>
 </resources>

@@ -22,4 +22,7 @@
     <string name="type">타입</string>
     <string name="pause">중단</string>
     <string name="gap">간격</string>
+    <string name="no_sound">무음</string>
+    <string name="vibrate">진동</string>
+    <string name="sound">소리 있음</string>
 </resources>
