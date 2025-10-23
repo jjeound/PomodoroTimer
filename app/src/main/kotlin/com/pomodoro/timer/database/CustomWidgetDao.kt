@@ -1,5 +1,6 @@
 package com.pomodoro.timer.database
 
+import androidx.compose.ui.graphics.Color
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -31,7 +32,7 @@ interface CustomWidgetDao {
             hour = CASE WHEN :hour IS NOT NULL THEN :hour ELSE hour END,
             minute = CASE WHEN :minute IS NOT NULL THEN :minute ELSE minute END,
             second = CASE WHEN :second IS NOT NULL THEN :second ELSE second END,
-            interval = CASE WHEN :interval IS NOT NULL THEN :interval ELSE interval END,
+            gap = CASE WHEN :gap IS NOT NULL THEN :gap ELSE gap END,
             breakTime = CASE WHEN :breakTime IS NOT NULL THEN :breakTime ELSE breakTime END,
             startSound = CASE WHEN :startSound IS NOT NULL THEN :startSound ELSE startSound END,
             restartSound = CASE WHEN :restartSound IS NOT NULL THEN :restartSound ELSE restartSound END,
@@ -45,19 +46,19 @@ interface CustomWidgetDao {
         id: Long,
         fontSize: Float?,
         fontWeight: Int?,
-        fontColor: Long?,
+        fontColor: String?,
         backgroundImage: String?,
         mode: Int?,
         hour: Int?,
         minute: Int?,
         second: Int?,
-        interval: Int?,
+        gap: Int?,
         breakTime: Int?,
         startSound: String?,
         restartSound: String?,
         expireMode: Int?,
         repeat: Int?,
-        fgColor: Long?,
-        bgColor: Long?
+        fgColor: String?,
+        bgColor: String?
     )
 }

@@ -1,6 +1,7 @@
 package com.pomodoro.timer.database.entity.mapper
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
@@ -8,6 +9,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.pomodoro.timer.CustomWidget
 import com.pomodoro.timer.database.entity.CustomWidgetEntity
+import com.pomodoro.timer.presentation.common.ExpireMode
 
 object CustomWidgetEntityMapper : EntityMapper<CustomWidget, CustomWidgetEntity> {
 
@@ -15,24 +17,29 @@ object CustomWidgetEntityMapper : EntityMapper<CustomWidget, CustomWidgetEntity>
 
   override fun asEntity(domain: CustomWidget): CustomWidgetEntity {
     val backgroundJson = domain.backgroundImage?.let { gson.toJson(it) }
+    val expireMode = when(domain.expireMode){
+        ExpireMode.NO_SOUND -> 0
+        ExpireMode.VIBRATE -> 1
+        ExpireMode.SOUND -> 2
+    }
 
     return CustomWidgetEntity(
       fontSize = domain.fontStyle.fontSize.value,
       fontWeight = domain.fontStyle.fontWeight!!.weight,
-      fontColor = domain.fontColor.value.toLong(),
+      fontColor = domain.fontColor.toArgb().toString(16),
       backgroundImage = backgroundJson,
       mode = domain.mode,
       hour = domain.hour,
       minute = domain.minute,
       second = domain.second,
-      interval = domain.interval,
+      gap = domain.gap,
       breakTime = domain.breakTime,
       startSound = domain.startSound,
       restartSound = domain.restartSound,
-      expireMode = domain.expireMode,
+      expireMode = expireMode,
       repeat = domain.repeat,
-      fgColor = domain.fgColor.value.toLong(),
-      bgColor = domain.bgColor.value.toLong()
+      fgColor = domain.fgColor.toArgb().toString(16),
+      bgColor = domain.bgColor.toArgb().toString(16)
     )
   }
 
@@ -43,8 +50,14 @@ object CustomWidgetEntityMapper : EntityMapper<CustomWidget, CustomWidgetEntity>
     val textStyle = TextStyle(
       fontSize = entity.fontSize.sp,
       fontWeight = FontWeight(entity.fontWeight),
-      color = Color(entity.fontColor.toULong())
+      color = Color(entity.fontColor.toLong(16))
     )
+    val expireMode = when(entity.expireMode){
+        0 -> ExpireMode.NO_SOUND
+        1 -> ExpireMode.VIBRATE
+        2 -> ExpireMode.SOUND
+        else -> ExpireMode.NO_SOUND
+    }
 
     return CustomWidget(
       id = entity.id,
@@ -54,14 +67,14 @@ object CustomWidgetEntityMapper : EntityMapper<CustomWidget, CustomWidgetEntity>
       hour = entity.hour,
       minute = entity.minute,
       second = entity.second,
-      interval = entity.interval,
+      gap = entity.gap,
       breakTime = entity.breakTime,
       startSound = entity.startSound,
       restartSound = entity.restartSound,
-      expireMode = entity.expireMode,
+      expireMode = expireMode,
       repeat = entity.repeat,
-      fgColor = Color(entity.fgColor),
-      bgColor = Color(entity.bgColor)
+      fgColor = Color(entity.fgColor.toLong(16)),
+      bgColor = Color(entity.bgColor.toLong(16))
     )
   }
 }
