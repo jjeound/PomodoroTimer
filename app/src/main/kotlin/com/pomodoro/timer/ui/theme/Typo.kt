@@ -25,7 +25,10 @@ data class CustomTypography(
     val selectorSelected: TextStyle,
     val selectorUnSelected: TextStyle,
     val textField: TextStyle,
-    val textPreview: TextStyle
+    val textPreview1: TextStyle,
+    val textPreview2: TextStyle,
+    val textPreview3: TextStyle,
+    val textPreview4: TextStyle,
 )
 
 val fontFamily = FontFamily(
@@ -41,6 +44,26 @@ val fontFamily = FontFamily(
 )
 val digitalMonoFont = FontFamily(
     Font(R.font.digital_7_mono),
+)
+val comfortaa = FontFamily(
+    Font(R.font.comfortaa_light, FontWeight.Light),
+    Font(R.font.comfortaa_regular, FontWeight.Normal),
+    Font(R.font.comfortaa_medium, FontWeight.Medium),
+    Font(R.font.comfortaa_semibold, FontWeight.SemiBold),
+    Font(R.font.comfortaa_bold, FontWeight.Bold),
+)
+val freesentation = FontFamily(
+    Font(R.font.freesentation_1thin, FontWeight.Thin),
+    Font(R.font.freesentation_2extralight, FontWeight.ExtraLight),
+    Font(R.font.freesentation_3light, FontWeight.Light),
+    Font(R.font.freesentation_4regular, FontWeight.Normal),
+    Font(R.font.freesentation_6semibold, FontWeight.SemiBold),
+    Font(R.font.freesentation_7bold, FontWeight.Bold),
+    Font(R.font.freesentation_8extrabold, FontWeight.ExtraBold),
+    Font(R.font.freesentation_9black, FontWeight.Black),
+)
+val bebasNeue = FontFamily(
+    Font(R.font.bebasneue_regular, FontWeight.Normal),
 )
 
 val customTypography =  CustomTypography(
@@ -59,5 +82,8 @@ val customTypography =  CustomTypography(
     selectorSelected = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.SemiBold, fontSize = 13.sp),
     selectorUnSelected = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = 13.sp),
     textField = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = 13.sp),
-    textPreview = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.SemiBold, fontSize = 50.sp)
+    textPreview1 = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
+    textPreview2 = TextStyle(fontFamily = comfortaa, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
+    textPreview3 = TextStyle(fontFamily = freesentation, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
+    textPreview4 = TextStyle(fontFamily = bebasNeue, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
 )
