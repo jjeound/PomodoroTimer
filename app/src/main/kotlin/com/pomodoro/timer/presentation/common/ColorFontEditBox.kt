@@ -1,5 +1,6 @@
 package com.pomodoro.timer.presentation.common
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,14 +20,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.pomodoro.timer.R
 import com.pomodoro.timer.ui.theme.CustomTheme
+import com.pomodoro.timer.ui.theme.customTypography
 
 @Composable
 fun ColorFontEditBox(
     onColorClick: (Color) -> Unit,
+    onFontClick: (TextStyle) -> Unit,
 ) {
+    val fonts = listOf(
+        customTypography.textPreview1,
+        customTypography.textPreview2,
+        customTypography.textPreview3,
+        customTypography.textPreview4,
+    )
     val colors = listOf(
         Pair(Color(0xFFF94C5E), Color(0xFFE83B4D)),
         Pair(Color(0xFF9AC1F0), Color(0xFF89B0E0)),
@@ -89,9 +99,13 @@ fun ColorFontEditBox(
                 horizontalArrangement = Arrangement.spacedBy(33.dp)
             ) {
                 repeat(4){ index ->
+                    val fontStyle = fonts[index]
                     Text(
+                        modifier = Modifier.clickable(
+                            onClick = { onFontClick(fontStyle) }
+                        ),
                         text = "10",
-                        style = CustomTheme.typography.textPreview,
+                        style = fontStyle,
                         color = CustomTheme.colors.text
                     )
                 }

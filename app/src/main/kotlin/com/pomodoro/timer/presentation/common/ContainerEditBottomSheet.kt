@@ -52,7 +52,8 @@ fun ContainerEditBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        contentColor = CustomTheme.colors.surface
+        containerColor = CustomTheme.colors.surface,
+        scrimColor = Color.Transparent,
     ) {
         Column(
             modifier = Modifier.wrapContentHeight().padding(vertical = 30.dp),
