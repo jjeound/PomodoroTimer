@@ -7,6 +7,7 @@ import com.pomodoro.timer.database.entity.CustomWidgetEntity
 
 
 @Database(entities = [CustomWidgetEntity::class], version = 3, exportSchema = true)
+@TypeConverters(value = [TextStyleTypeConverter::class, ColorTypeConverter::class])
 abstract class PomodoroDatabase : RoomDatabase() {
     abstract fun customWidgetDao(): CustomWidgetDao
 }

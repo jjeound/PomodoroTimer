@@ -1,33 +1,24 @@
 package com.pomodoro.timer.database.entity.mapper
 
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import androidx.core.net.toUri
 import com.pomodoro.timer.CustomWidget
 import com.pomodoro.timer.database.entity.CustomWidgetEntity
 import com.pomodoro.timer.presentation.common.ExpireMode
 
 object CustomWidgetsEntityMapper : EntityMapper<List<CustomWidget>, List<CustomWidgetEntity>> {
 
-  private val gson = Gson()
 
   override fun asEntity(domain: List<CustomWidget>): List<CustomWidgetEntity> {
     return domain.map { domain ->
-      val backgroundJson = domain.backgroundImage?.let { gson.toJson(it) }
       val expireMode = when(domain.expireMode){
           ExpireMode.NO_SOUND -> 0
           ExpireMode.VIBRATE -> 1
           ExpireMode.SOUND -> 2
       }
       CustomWidgetEntity(
-        fontSize = domain.fontStyle.fontSize.value,
-        fontWeight = domain.fontStyle.fontWeight!!.weight,
-        fontColor = domain.fontColor.toArgb().toString(16),
-        backgroundImage = backgroundJson,
+        textStyle = domain.textStyle,
+        fontColor = domain.fontColor,
+        backgroundImage = domain.backgroundImage.toString(),
         mode = domain.mode,
         hour = domain.hour,
         minute = domain.minute,
@@ -38,22 +29,14 @@ object CustomWidgetsEntityMapper : EntityMapper<List<CustomWidget>, List<CustomW
         restartSound = domain.restartSound,
         expireMode = expireMode,
         repeat = domain.repeat,
-        fgColor = domain.fgColor.toArgb().toString(16),
-        bgColor = domain.bgColor.toArgb().toString(16)
+        fgColor = domain.fgColor,
+        bgColor = domain.bgColor
       )
     }
   }
 
   override fun asDomain(entity: List<CustomWidgetEntity>): List<CustomWidget> {
     return entity.map { entity ->
-      val backgroundList: List<String>? = entity.backgroundImage?.let {
-        gson.fromJson(it, object : TypeToken<List<String>>() {}.type)
-      }
-      val textStyle = TextStyle(
-        fontSize = entity.fontSize.sp,
-        fontWeight = FontWeight(entity.fontWeight),
-        color = Color(entity.fontColor.toLong(16))
-      )
       val expireMode = when(entity.expireMode){
           0 -> ExpireMode.NO_SOUND
           1 -> ExpireMode.VIBRATE
@@ -63,8 +46,9 @@ object CustomWidgetsEntityMapper : EntityMapper<List<CustomWidget>, List<CustomW
 
       CustomWidget(
         id = entity.id,
-        fontStyle = textStyle,
-        backgroundImage = backgroundList,
+        textStyle = entity.textStyle,
+        fontColor = entity.fontColor,
+        backgroundImage = entity.backgroundImage?.toUri(),
         mode = entity.mode,
         hour = entity.hour,
         minute = entity.minute,
@@ -75,8 +59,8 @@ object CustomWidgetsEntityMapper : EntityMapper<List<CustomWidget>, List<CustomW
         restartSound = entity.restartSound,
         expireMode = expireMode,
         repeat = entity.repeat,
-        fgColor = Color(entity.fgColor.toLong(16)),
-        bgColor = Color(entity.bgColor.toLong(16))
+        fgColor = entity.fgColor,
+        bgColor = entity.bgColor
       )
     }
   }

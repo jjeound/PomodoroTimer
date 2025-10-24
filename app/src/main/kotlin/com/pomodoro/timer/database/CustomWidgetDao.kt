@@ -1,6 +1,7 @@
 package com.pomodoro.timer.database
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -10,7 +11,7 @@ import com.pomodoro.timer.database.entity.CustomWidgetEntity
 @Dao
 interface CustomWidgetDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCustomWidget(customWidgetEntity: CustomWidgetEntity)
+    suspend fun insertCustomWidget(customWidgetEntity: CustomWidgetEntity): Long
 
     @Query("SELECT * FROM custom_widget")
     suspend fun getAllCustomWidgets(): List<CustomWidgetEntity>
@@ -24,8 +25,7 @@ interface CustomWidgetDao {
     @Query("""
         UPDATE custom_widget
         SET 
-            fontSize = CASE WHEN :fontSize IS NOT NULL THEN :fontSize ELSE fontSize END,
-            fontWeight = CASE WHEN :fontWeight IS NOT NULL THEN :fontWeight ELSE fontWeight END,
+            textStyle = CASE WHEN :textStyle IS NOT NULL THEN :textStyle ELSE textStyle END,
             fontColor = CASE WHEN :fontColor IS NOT NULL THEN :fontColor ELSE fontColor END,
             backgroundImage = CASE WHEN :backgroundImage IS NOT NULL THEN :backgroundImage ELSE backgroundImage END,
             mode = CASE WHEN :mode IS NOT NULL THEN :mode ELSE mode END,
@@ -44,9 +44,8 @@ interface CustomWidgetDao {
     """)
     suspend fun updateCustomWidget(
         id: Long,
-        fontSize: Float?,
-        fontWeight: Int?,
-        fontColor: String?,
+        textStyle: TextStyle?,
+        fontColor: Color?,
         backgroundImage: String?,
         mode: Int?,
         hour: Int?,
@@ -58,7 +57,7 @@ interface CustomWidgetDao {
         restartSound: String?,
         expireMode: Int?,
         repeat: Int?,
-        fgColor: String?,
-        bgColor: String?
+        fgColor: Color?,
+        bgColor: Color?
     )
 }

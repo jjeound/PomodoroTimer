@@ -1,6 +1,7 @@
 package com.pomodoro.timer.database.entity
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -8,9 +9,8 @@ import androidx.room.PrimaryKey
 data class CustomWidgetEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0L,
-    val fontSize: Float,
-    val fontWeight: Int,
-    val fontColor: String,
+    val textStyle: TextStyle,
+    val fontColor: Color,
     val backgroundImage: String? = null,
     val mode: Int = 0,
     val hour: Int,
@@ -22,6 +22,6 @@ data class CustomWidgetEntity(
     val restartSound: String,
     val expireMode: Int,
     val repeat: Int,
-    val fgColor: String,
-    val bgColor: String
+    val fgColor: Color,
+    val bgColor: Color
 )
