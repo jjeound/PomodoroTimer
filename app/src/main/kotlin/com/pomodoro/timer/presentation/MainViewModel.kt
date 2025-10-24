@@ -78,7 +78,6 @@ class MainViewModel @Inject constructor(
         if(_editingWidget.value.id != 0L)
             updateWidget(_editingWidget.value)
         else saveWidget(_editingWidget.value)
-        _currentWidget.value = _editingWidget.value
     }
 
     fun onAddNewWidget(){
@@ -89,8 +88,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun onNextWidget(index: Int){
-        _currentWidget.value = _widgetsByMode.value[index]
-        _editingWidget.value = _currentWidget.value
+        _editingWidget.value = _widgetsByMode.value[index]
     }
 
     fun saveWidget(widget: CustomWidget){
