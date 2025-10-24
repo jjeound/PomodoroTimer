@@ -6,25 +6,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pomodoro.timer.data.MainRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class PomodoroViewModel @Inject constructor(
-    private val repository: MainRepository
-): ViewModel() {
+class PomodoroViewModel @Inject constructor(): ViewModel() {
     var remainingTime by mutableIntStateOf(60 * 60)
         private set
     var state by mutableStateOf(TimerState.IDLE)
         private set
     var breakTime by mutableIntStateOf(5 * 60)
         private set
-    var repeat by mutableIntStateOf(5)
+    var repeat by mutableIntStateOf(1)
         private set
-    private var isRunning by mutableStateOf(false)
+    var tempRepeat by mutableIntStateOf(repeat)
+        private set
+    private var timerJob: Job? = null
 
     fun setBT(seconds: Int) {
         breakTime = seconds
@@ -32,48 +32,58 @@ class PomodoroViewModel @Inject constructor(
 
     fun setRP(count: Int) {
         repeat = count
+        tempRepeat = repeat
     }
 
     fun onReset() {
+        timerJob?.cancel()
         remainingTime = 60 * 60
         state = TimerState.IDLE
+        tempRepeat = repeat
     }
 
     fun onPause() {
-        isRunning = false
         state = TimerState.PAUSED
+        timerJob?.cancel()
     }
 
     fun onStart() {
-        if (isRunning) return
-        isRunning = true
-        repeat--
-        state = TimerState.RUNNING
-        viewModelScope.launch {
-            while (isRunning && remainingTime > 0) {
-                delay(1000)
-                remainingTime--
-            }
-            if (remainingTime == breakTime) onBreak()
+        if (tempRepeat == 0) {
+            onReset()
+            return
         }
+        tempRepeat--
+        state = TimerState.RUNNING
+        startTimer(remainingTime - breakTime) { onBreak() }
     }
 
     fun onResume() {
-        isRunning = true
-        state = TimerState.RUNNING
+        if (state == TimerState.PAUSED) {
+            state = TimerState.RUNNING
+            startTimer(remainingTime - if (state == TimerState.RUNNING) breakTime else 0) {
+                onBreak()
+            }
+        }
     }
 
-    fun onBreak(){
-        state = TimerState.IDLE
-        viewModelScope.launch {
-            while (remainingTime > 0) {
+    private fun startTimer(duration: Int, onFinish: () -> Unit) {
+        timerJob?.cancel()
+        timerJob = viewModelScope.launch {
+            var time = duration
+            while (time > 0 && state == TimerState.RUNNING) {
                 delay(1000)
-                remainingTime--
+                time--
+                remainingTime = breakTime + time
             }
-            if (remainingTime == 0){
-                remainingTime = 60 * 60
-                onStart()
-            }
+            if (state == TimerState.RUNNING) onFinish()
+        }
+    }
+
+    fun onBreak() {
+        state = TimerState.BREAK
+        startTimer(breakTime) {
+            remainingTime = 60 * 60
+            onStart()
         }
     }
 }
@@ -82,4 +92,5 @@ enum class TimerState {
     IDLE,
     RUNNING,
     PAUSED,
+    BREAK
 }
