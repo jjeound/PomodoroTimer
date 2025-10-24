@@ -29,9 +29,10 @@ import com.pomodoro.timer.ui.theme.customTypography
 @Composable
 fun ColorFontEditBox(
     onColorClick: (Color) -> Unit,
+    onColorPickerClick: (index: Int) -> Unit,
     onFontClick: (TextStyle) -> Unit,
 ) {
-    val fonts = listOf(
+    val textStyles = listOf(
         customTypography.textPreview1,
         customTypography.textPreview2,
         customTypography.textPreview3,
@@ -70,7 +71,11 @@ fun ColorFontEditBox(
                     )
                 }
                 Box(
-                    modifier = Modifier.size(30.dp)
+                    modifier = Modifier.size(30.dp).clickable(
+                        onClick = {
+                            onColorPickerClick(2)
+                        }
+                    )
                 ){
                     Icon(
                         imageVector = ImageVector.vectorResource(R.drawable.rainbow),
@@ -99,13 +104,13 @@ fun ColorFontEditBox(
                 horizontalArrangement = Arrangement.spacedBy(33.dp)
             ) {
                 repeat(4){ index ->
-                    val fontStyle = fonts[index]
+                    val textStyle = textStyles[index]
                     Text(
                         modifier = Modifier.clickable(
-                            onClick = { onFontClick(fontStyle) }
+                            onClick = { onFontClick(textStyle) }
                         ),
                         text = "10",
-                        style = fontStyle,
+                        style = textStyle,
                         color = CustomTheme.colors.text
                     )
                 }

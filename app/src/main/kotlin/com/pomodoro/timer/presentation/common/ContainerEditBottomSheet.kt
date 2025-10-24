@@ -1,5 +1,14 @@
 package com.pomodoro.timer.presentation.common
 
+import android.Manifest
+import android.app.Activity
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -8,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -24,10 +34,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.pomodoro.timer.R
 import com.pomodoro.timer.ui.theme.CustomTheme
 import com.pomodoro.timer.ui.theme.MyTheme
@@ -38,8 +50,10 @@ fun ContainerEditBottomSheet(
     onDismissRequest: () -> Unit,
     onColorClick: (Color) -> Unit,
     onBackgroundColorClick: (Color) -> Unit,
-    onPlusClick: () -> Unit,
+    onAddImage: (Uri) -> Unit,
+    onColorPickerClick: (index: Int) -> Unit,
 ) {
+    val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = false,
     )
@@ -49,6 +63,42 @@ fun ContainerEditBottomSheet(
         Pair(Color(0xFF72FA93), Color(0xFF61E982)),
         Pair(Color(0xFFF6C445), Color(0xFFE5B334)),
     )
+    val albumLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val uri = result.data?.data
+                uri?.let {
+                    onAddImage(it)
+                }
+            }
+        }
+    val imageAlbumIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
+        type = "image/*"
+        putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false)
+        addCategory(Intent.CATEGORY_OPENABLE)
+    }
+
+    val galleryPermissions = when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> arrayOf(
+            Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED,
+            Manifest.permission.READ_MEDIA_IMAGES,
+        )
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> arrayOf(
+            Manifest.permission.READ_MEDIA_IMAGES
+        )
+        else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+    }
+    val requestPermissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestMultiplePermissions(),
+            onResult = { permissions ->
+                if (permissions.all { it.value }) {
+                    albumLauncher.launch(imageAlbumIntent)
+                } else {
+                    Toast.makeText(context, "갤러리 권한을 허용해야 합니다", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
@@ -81,25 +131,14 @@ fun ContainerEditBottomSheet(
                         )
                     }
                     Box(
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(30.dp).clickable(
+                            onClick = {
+                                onColorPickerClick(0)
+                            }
+                        )
                     ){
                         Icon(
                             imageVector = ImageVector.vectorResource(R.drawable.rainbow),
-                            contentDescription = null,
-                            tint = Color.Unspecified
-                        )
-                    }
-                    Box(
-                        modifier = Modifier.size(30.dp)
-                            .border(
-                                width = 1.dp,
-                                color = CustomTheme.colors.buttonBorder,
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ){
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.plus),
                             contentDescription = null,
                             tint = Color.Unspecified
                         )
@@ -132,10 +171,37 @@ fun ContainerEditBottomSheet(
                         )
                     }
                     Box(
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(30.dp).clickable(
+                            onClick = {
+                                onColorPickerClick(1)
+                            }
+                        )
                     ){
                         Icon(
                             imageVector = ImageVector.vectorResource(R.drawable.rainbow),
+                            contentDescription = null,
+                            tint = Color.Unspecified
+                        )
+                    }
+                    Box(
+                        modifier = Modifier.size(30.dp)
+                            .border(
+                                width = 1.dp,
+                                color = CustomTheme.colors.buttonBorder,
+                                shape = CircleShape
+                            ).clickable(
+                                onClick = {
+                                    if (galleryPermissions.all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
+                                        albumLauncher.launch(imageAlbumIntent)
+                                    } else {
+                                        requestPermissionLauncher.launch(galleryPermissions)
+                                    }
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ){
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.plus),
                             contentDescription = null,
                             tint = Color.Unspecified
                         )
@@ -181,7 +247,8 @@ fun ContainerEditBottomSheetPreview() {
             onDismissRequest = {},
             onColorClick = {},
             onBackgroundColorClick = {},
-            onPlusClick = {}
+            onAddImage = {},
+            onColorPickerClick = {}
         )
     }
 }
