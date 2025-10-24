@@ -1,9 +1,11 @@
 package com.pomodoro.timer.presentation.pomodoro
 
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
@@ -28,6 +31,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
@@ -39,9 +43,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.pomodoro.timer.CustomWidget
 import com.pomodoro.timer.R
-import com.pomodoro.timer.presentation.AutoSlideImagePager
 import com.pomodoro.timer.ui.theme.CustomTheme
 import com.pomodoro.timer.ui.theme.MyTheme
 import kotlin.math.cos
@@ -54,6 +58,7 @@ fun PomodoroTimer(
     editMode: Boolean,
     onEditText: () -> Unit,
     onEditContainer: () -> Unit,
+    showButtons: Boolean,
     viewModel: PomodoroViewModel = hiltViewModel()
 ){
     viewModel.setRP(widget.repeat)
@@ -92,6 +97,7 @@ fun PomodoroTimer(
         onEditText = onEditText,
         onEditContainer = onEditContainer,
         editMode = editMode,
+        showButtons = showButtons
     )
 }
 
@@ -109,6 +115,7 @@ fun PomodoroTimerContent(
     onEditText: () -> Unit = {},
     onEditContainer: () -> Unit = {},
     editMode: Boolean = false,
+    showButtons: Boolean = true,
 ){
     val windowInfo = LocalWindowInfo.current
     val screenSize = with(LocalDensity.current) {
@@ -120,6 +127,9 @@ fun PomodoroTimerContent(
     val isLandscape = screenSize.width > screenSize.height
     val radius = (if (isLandscape) screenSize.height else screenSize.width) / 2 * 0.8f
     Box(modifier = modifier){
+        if(state == TimerState.IDLE){
+
+        }
         Box(
             modifier = Modifier.align(Alignment.Center).border(
                 width = 3.dp,
@@ -130,18 +140,18 @@ fun PomodoroTimerContent(
             Timer(
                 text = minutesTxt,
                 radius = radius,
-                textStyle = widget.fontStyle,
+                textStyle = widget.textStyle,
                 color = widget.fgColor,
                 bgColor = widget.bgColor,
                 fontColor = widget.fontColor,
-                images = widget.backgroundImage,
+                image = widget.backgroundImage,
                 remainingTime = remainingTime,
                 editMode = editMode,
                 onEditText = onEditText,
                 onEditContainer = onEditContainer,
             )
         }
-        if(!editMode){
+        if(!editMode && showButtons){
             Box(
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp)
             ){
@@ -165,7 +175,7 @@ fun Timer(
     color: Color,
     fontColor: Color,
     bgColor: Color,
-    images: List<String>?,
+    image: Uri?,
     remainingTime: Int = 0,
     editMode: Boolean,
     onEditText: () -> Unit = {},
@@ -194,7 +204,9 @@ fun Timer(
                                 color = CustomTheme.colors.indicatorBox,
                                 shape = RoundedCornerShape(12.dp)
                             ).clickable(
-                                onClick = onEditText
+                                onClick = onEditText,
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
                             )
                         } else {
                             Modifier
@@ -213,7 +225,8 @@ fun Timer(
             }
         }
         val angleStepForDot = 360f / 60
-        val radiusForDot = radius * 0.8f
+        val radiusForDot = radius * 0.83f
+        val radiusForCircle = radius * 0.8f
         repeat(60){ idx ->
             val angle = angleStepForDot * idx
             Box(
@@ -248,11 +261,26 @@ fun Timer(
             }
         }
         val sweepAngle = (remainingTime / 3600f) * 360f
+        if(image != null){
+            Box(
+                modifier = Modifier.clip(shape = CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    modifier = Modifier.size(radiusForCircle * 2),
+                    model = image,
+                    contentDescription = "Image",
+                    contentScale = ContentScale.Crop,
+                )
+            }
+        }
         Canvas(
-            modifier = Modifier.size(radiusForDot * 2)
+            modifier = Modifier.size(radiusForCircle * 2)
                 .clickable(
                     enabled = editMode,
-                    onClick = onEditContainer
+                    onClick = onEditContainer,
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
                 )
         ) {
             drawArc(
@@ -262,16 +290,12 @@ fun Timer(
                 useCenter = true,
             )
             drawArc(
-                color = color,
+                color = color.copy(
+                    alpha = 0.9f
+                ),
                 startAngle = -90f,
                 sweepAngle = if(editMode) -270f else sweepAngle,
                 useCenter = true,
-            )
-        }
-        if(images != null && images.isNotEmpty()){
-            AutoSlideImagePager(
-                images = images,
-                modifier = Modifier.size(radiusForDot * 2)
             )
         }
         Icon(
@@ -291,7 +315,7 @@ fun TimerButtons(
     onResume: () -> Unit = {},
 ){
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         OutlinedButton(
@@ -313,6 +337,7 @@ fun TimerButtons(
                     TimerState.IDLE -> onStart()
                     TimerState.RUNNING -> onPause()
                     TimerState.PAUSED -> onResume()
+                    TimerState.BREAK -> onStart()
                 }
             },
             border = BorderStroke(1.dp, CustomTheme.colors.buttonBorder),
@@ -333,6 +358,11 @@ fun TimerButtons(
                 )
                 TimerState.PAUSED -> Text(
                     text = stringResource(id = R.string.resume),
+                    color = CustomTheme.colors.text,
+                    style = CustomTheme.typography.buttonTimerSmall
+                )
+                TimerState.BREAK -> Text(
+                    text = stringResource(id = R.string.start),
                     color = CustomTheme.colors.text,
                     style = CustomTheme.typography.buttonTimerSmall
                 )

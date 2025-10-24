@@ -35,6 +35,7 @@ import com.pomodoro.timer.ui.theme.MyTheme
 fun PomodoroTextEditBottomSheet(
     onDismissRequest: () -> Unit,
     onColorClick: (Color) -> Unit,
+    onColorPickerClick: (index: Int) -> Unit,
     onFontClick: (TextStyle) -> Unit,
     gap: Int,
     onClickGap: (Int) -> Unit,
@@ -69,6 +70,7 @@ fun PomodoroTextEditBottomSheet(
                     0 -> {
                         ColorFontEditBox(
                             onColorClick = onColorClick,
+                            onColorPickerClick = onColorPickerClick,
                             onFontClick = onFontClick,
                         )
                     }
@@ -131,6 +133,7 @@ fun PomodoroTextEditBottomSheetPreview() {
         PomodoroTextEditBottomSheet(
             onDismissRequest = {},
             onColorClick = {},
+            onColorPickerClick = {},
             onFontClick = {},
             gap = 5,
             onClickGap = {},
