@@ -3,6 +3,7 @@ package com.pomodoro.timer.data
 import androidx.annotation.WorkerThread
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
 import com.pomodoro.timer.CustomWidget
 import com.pomodoro.timer.data.PrefKeys.WIDGET_ID
 import com.pomodoro.timer.database.CustomWidgetDao
@@ -48,26 +49,35 @@ class MainRepositoryImpl @Inject constructor(
             }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @WorkerThread
     override fun getAllCustomWidgets(
         onStart: () -> Unit,
         onComplete: () -> Unit,
         onError: (Throwable) -> Unit
-    ): Flow<List<CustomWidget>?> = flow {
-        val widgets = dao.getAllCustomWidgets().asDomain()
-        if(widgets.isEmpty()){
-            emit(null)
-        } else {
-            emit(widgets)
+    ): Flow<List<CustomWidget>?> {
+        return dataStore.data
+            .map { pref -> pref[WIDGET_ID] }
+            .distinctUntilChanged()
+            .flatMapLatest { id ->
+                flow {
+                    val widgets = dao.getAllCustomWidgets().asDomain().sortedByDescending {
+                        it.id == (id ?: 0L)
+                    }
+                    if(widgets.isEmpty()){
+                        emit(null)
+                    } else {
+                        emit(widgets)
+                    }
+                }
+            }
+            .onStart { onStart() }
+            .onEach { onComplete() }
+            .catch { throwable ->
+                onError(throwable)
+                emit(emptyList())
+            }
         }
-    }.onStart {
-        onStart()
-    }.onEach {
-        onComplete()
-    }.catch { throwable ->
-        onError(throwable)
-        emit(emptyList())
-    }
 
     @WorkerThread
     override fun updateWidget(
@@ -76,11 +86,13 @@ class MainRepositoryImpl @Inject constructor(
         onComplete: () -> Unit,
         onError: (Throwable) -> Unit
     ): Flow<Unit> = flow {
+        dataStore.edit { prefs ->
+            prefs[WIDGET_ID] = widget.id
+        }
         val entity = widget.asEntity()
         dao.updateCustomWidget(
-            entity.id,
-            entity.fontSize,
-            entity.fontWeight,
+            widget.id,
+            entity.textStyle,
             entity.fontColor,
             entity.backgroundImage,
             entity.mode,
@@ -113,9 +125,12 @@ class MainRepositoryImpl @Inject constructor(
         onComplete: () -> Unit,
         onError: (Throwable) -> Unit
     ): Flow<Unit> = flow {
-        dao.insertCustomWidget(
+        val id = dao.insertCustomWidget(
             widget.asEntity()
         )
+        dataStore.edit { prefs ->
+            prefs[WIDGET_ID] = id
+        }
         emit(Unit)
     }.onStart {
         onStart()
