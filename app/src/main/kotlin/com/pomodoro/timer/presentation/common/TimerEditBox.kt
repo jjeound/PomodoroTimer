@@ -93,7 +93,7 @@ fun TimerEditBox(
 
                 LaunchedEffect(listState.firstVisibleItemIndex) {
                     val newValue = listState.firstVisibleItemIndex
-                    if (newValue != breakTime) onChangeRepeat(newValue)
+                    onChangeBreakTime(newValue)
                 }
 
                 LazyColumn(
@@ -101,7 +101,7 @@ fun TimerEditBox(
                     modifier = Modifier.height(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    items(30) { index ->
+                    items(31) { index ->
                         Text(
                             modifier = Modifier.padding(vertical = 8.dp),
                             text = index.toString(),
@@ -137,7 +137,7 @@ fun TimerEditBox(
 
                 LaunchedEffect(listState.firstVisibleItemIndex) {
                     val newValue = listState.firstVisibleItemIndex
-                    if (newValue != repeat) onChangeBreakTime(newValue)
+                    onChangeRepeat(newValue)
                 }
 
                 LazyColumn(
@@ -287,6 +287,7 @@ fun TimerBox(
         }
     }
 }
+
 
 @Preview
 @Composable
