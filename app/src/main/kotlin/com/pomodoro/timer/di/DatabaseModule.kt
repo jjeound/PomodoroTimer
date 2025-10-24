@@ -2,8 +2,10 @@ package com.pomodoro.timer.di
 
 import android.app.Application
 import androidx.room.Room
+import com.pomodoro.timer.database.ColorTypeConverter
 import com.pomodoro.timer.database.CustomWidgetDao
 import com.pomodoro.timer.database.PomodoroDatabase
+import com.pomodoro.timer.database.TextStyleTypeConverter
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,9 +20,13 @@ object DatabaseModule {
     @Singleton
     fun provideAppDatabase(
         application: Application,
+        textStyleTypeConverter: TextStyleTypeConverter,
+        colorTypeConverter: ColorTypeConverter
     ): PomodoroDatabase {
         return Room
             .databaseBuilder(application, PomodoroDatabase::class.java, "PomodoroTimer.db")
+            .addTypeConverter(textStyleTypeConverter)
+            .addTypeConverter(colorTypeConverter)
             .build()
     }
 
