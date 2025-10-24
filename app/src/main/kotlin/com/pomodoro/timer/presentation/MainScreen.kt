@@ -1,13 +1,13 @@
 package com.pomodoro.timer.presentation
 
 import android.content.res.Configuration
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -33,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -43,7 +43,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
+import com.github.skydoves.colorpicker.compose.ColorEnvelope
+import com.github.skydoves.colorpicker.compose.HsvColorPicker
+import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import com.pomodoro.timer.CustomWidget
 import com.pomodoro.timer.R
 import com.pomodoro.timer.presentation.common.ContainerEditBottomSheet
@@ -51,7 +53,6 @@ import com.pomodoro.timer.presentation.pomodoro.PomodoroTextEditBottomSheet
 import com.pomodoro.timer.presentation.pomodoro.PomodoroTimer
 import com.pomodoro.timer.ui.theme.CustomTheme
 import com.pomodoro.timer.ui.theme.MyTheme
-import kotlinx.coroutines.delay
 
 @Composable
 fun MainScreen(
@@ -70,11 +71,6 @@ fun MainScreen(
         modifier = Modifier
             .fillMaxSize()
     ){
-        //이미지 배경 / 기본 배경
-        // 타이머 중간
-        // 타이머 시작, 중지, 초기화
-        // 편집 모드 - 취소, 확인, 바텀시트
-        // 반응형 UI
         if(uiState != MainUiState.Loading) {
             if(isTablet) {
 //                MainScreenContentTablet(
@@ -117,24 +113,30 @@ fun MainScreenContentPhone(
     onAddNewWidget: () -> Unit = {},
     onNextWidget: (Int) -> Unit
 ) {
-    Log.d("widgets", widgets.toString())
     val context = LocalContext.current
     val pagerState = rememberPagerState(
-        initialPage = widgets.indexOf(currentWidget),
-        pageCount = {
-        widgets.size
-    })
+        initialPage = 0,
+        pageCount = { widgets.size }
+    )
     var showTextEditBottomSheet by remember { mutableStateOf(false) }
     var showContainerEditBottomSheet by remember { mutableStateOf(false) }
+    val controller = rememberColorPickerController()
+    var showColorPicker by remember { mutableStateOf(false) }
+    var colorPickerOption by remember { mutableIntStateOf(0) }
+    var showButtons by remember { mutableStateOf(true) }
     LaunchedEffect(widgets.size) {
-        if(widgets.isNotEmpty()) pagerState.animateScrollToPage(widgets.lastIndex)
+        if(widgets.isNotEmpty() && editMode) pagerState.animateScrollToPage(widgets.lastIndex)
     }
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
         if (editMode && !showTextEditBottomSheet && !showContainerEditBottomSheet) {
             Row(
-                modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter).zIndex(1f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp)
+                    .align(Alignment.TopCenter)
+                    .zIndex(1f),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 OutlinedButton(
@@ -172,17 +174,23 @@ fun MainScreenContentPhone(
             }
         }
         HorizontalPager(
-            modifier = Modifier.combinedClickable(
-                enabled = !editMode,
-                onLongClick = {
-                    if(editable){
-                        onEditModeChange(true)
-                    } else {
-                        Toast.makeText(context, "가로 모드에서는 편집할 수 없습니다.", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                onClick = {}
-            ).align(Alignment.Center),
+            modifier = Modifier
+                .combinedClickable(
+                    enabled = !editMode,
+                    onDoubleClick = { showButtons = !showButtons },
+                    onLongClick = {
+                        if (editable) {
+                            onEditModeChange(true)
+                        } else {
+                            Toast.makeText(context, "가로 모드에서는 편집할 수 없습니다.", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    },
+                    onClick = {},
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                )
+                .align(Alignment.Center),
             state = pagerState,
             userScrollEnabled = editMode
         ) { page ->
@@ -198,7 +206,8 @@ fun MainScreenContentPhone(
                 },
                 onEditContainer = {
                     showContainerEditBottomSheet = true
-                }
+                },
+                showButtons = showButtons
             )
 //            when(mode){
 //                0 -> {}
@@ -208,7 +217,9 @@ fun MainScreenContentPhone(
         }
         if (editMode) {
             Row(
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 40.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -227,12 +238,14 @@ fun MainScreenContentPhone(
                 }
             }
             Box(
-                modifier = Modifier.padding(40.dp)
+                modifier = Modifier
+                    .padding(40.dp)
                     .border(
                         width = 1.dp,
                         color = CustomTheme.colors.buttonBorder,
                         shape = CircleShape
-                    ).align(Alignment.BottomEnd)
+                    )
+                    .align(Alignment.BottomEnd)
                     .clickable(
                         onClick = {
                             onAddNewWidget()
@@ -241,7 +254,9 @@ fun MainScreenContentPhone(
                 contentAlignment = Alignment.Center
             ){
                 Icon(
-                    modifier = Modifier.size(50.dp).padding(8.dp),
+                    modifier = Modifier
+                        .size(50.dp)
+                        .padding(8.dp),
                     imageVector = ImageVector.vectorResource(R.drawable.plus),
                     contentDescription = null,
                     tint = Color.Unspecified
@@ -263,11 +278,24 @@ fun MainScreenContentPhone(
                 onBackgroundColorClick = { color ->
                     editWidget(
                         editingWidget.copy(
-                            bgColor = color
+                            bgColor = color,
+                            backgroundImage = null
                         )
                     )
                 },
-                onPlusClick = {}
+                onAddImage = {
+                    editWidget(
+                        editingWidget.copy(
+                            bgColor = Color.Transparent,
+                            backgroundImage = it
+                        )
+                    )
+                },
+                onColorPickerClick = { index ->
+                    showColorPicker = true
+                    showContainerEditBottomSheet = false
+                    colorPickerOption = index
+                }
             )
         }
         if(showTextEditBottomSheet){
@@ -284,10 +312,15 @@ fun MainScreenContentPhone(
                                 )
                             )
                         },
+                        onColorPickerClick = { index ->
+                            showColorPicker = true
+                            showTextEditBottomSheet = false
+                            colorPickerOption = index
+                        },
                         onFontClick = {
                             editWidget(
                                 editingWidget.copy(
-                                    fontStyle = it
+                                    textStyle = it
                                 )
                             )
                         },
@@ -343,40 +376,64 @@ fun MainScreenContentPhone(
                 }
             }
         }
-    }
-}
-
-
-@Composable
-fun AutoSlideImagePager(
-    images: List<String>,
-    modifier: Modifier
-) {
-    val pagerState = rememberPagerState(
-        pageCount = { images.size }
-    )
-
-    // 자동 슬라이드
-    LaunchedEffect(key1 = pagerState.currentPage) {
-        delay(30_000) // 30초
-        val nextPage = (pagerState.currentPage + 1) % images.size
-        pagerState.animateScrollToPage(nextPage)
-    }
-
-    HorizontalPager(
-        state = pagerState,
-        modifier = modifier
-    ) { page ->
-        Box(modifier = modifier.clip(shape = CircleShape)) {
-            AsyncImage(
-                model = images[page],
-                contentDescription = "Slide Image",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+        if(showColorPicker){
+            Box(
+                modifier = Modifier.align(Alignment.BottomCenter).padding(
+                    bottom = 40.dp
+                )
+            ) {
+                Icon(
+                    modifier = Modifier.align(Alignment.TopEnd).clickable(
+                        onClick = {
+                            showColorPicker = false
+                            if( colorPickerOption == 2){
+                                showTextEditBottomSheet = true
+                            } else {
+                                showContainerEditBottomSheet = true
+                            }
+                        }
+                    ),
+                    imageVector = ImageVector.vectorResource(R.drawable.close),
+                    contentDescription = null,
+                    tint = Color.Unspecified
+                )
+                HsvColorPicker(
+                    modifier = Modifier
+                        .size(200.dp)
+                        .padding(10.dp),
+                    controller = controller,
+                    onColorChanged = { colorEnvelope: ColorEnvelope ->
+                        when (colorPickerOption) {
+                            0 -> {
+                                editWidget(
+                                    editingWidget.copy(
+                                        fgColor = Color(colorEnvelope.hexCode.toLong(16))
+                                    )
+                                )
+                            }
+                            1 -> {
+                                editWidget(
+                                    editingWidget.copy(
+                                        bgColor = Color(colorEnvelope.hexCode.toLong(16)),
+                                        backgroundImage = null
+                                    )
+                                )
+                            }
+                            2 -> {
+                                editWidget(
+                                    editingWidget.copy(
+                                        fontColor = Color(colorEnvelope.hexCode.toLong(16))
+                                    )
+                                )
+                            }
+                        }
+                    }
+                )
+            }
         }
     }
 }
+
 
 @Preview
 @Composable
