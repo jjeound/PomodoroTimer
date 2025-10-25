@@ -9,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,6 +26,8 @@ class PomodoroViewModel @Inject constructor(): ViewModel() {
         private set
     var tempRepeat by mutableIntStateOf(repeat)
         private set
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
     private var timerJob: Job? = null
 
     fun setBT(seconds: Int) {
@@ -51,6 +55,9 @@ class PomodoroViewModel @Inject constructor(): ViewModel() {
         if (tempRepeat == 0) {
             onReset()
             return
+        }
+        viewModelScope.launch {
+            _eventFlow.emit(UiEvent.PlayStartSound)
         }
         tempRepeat--
         state = TimerState.RUNNING
@@ -81,11 +88,19 @@ class PomodoroViewModel @Inject constructor(): ViewModel() {
 
     fun onBreak() {
         state = TimerState.BREAK
+        viewModelScope.launch {
+            _eventFlow.emit(UiEvent.PlayBreakSound)
+        }
         startTimer(breakTime) {
             remainingTime = 60 * 60
             onStart()
         }
     }
+}
+
+sealed interface UiEvent{
+    data object PlayStartSound: UiEvent
+    data object PlayBreakSound: UiEvent
 }
 
 enum class TimerState {
