@@ -2,18 +2,16 @@ package com.pomodoro.timer.presentation.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -37,17 +35,25 @@ import com.pomodoro.timer.ui.theme.MyTheme
 
 @Composable
 fun SoundEditBox(
-    expireMode: ExpireMode,
-    onClickExpireMode: (ExpireMode) -> Unit,
-    startSound: String,
-    restartSound: String,
-    onChangeStartSound: (String) -> Unit,
-    onChangeRestartSound: (String) -> Unit,
+    soundMode: SoundMode,
+    onClickSoundMode: (SoundMode) -> Unit,
+    startSound: Int,
+    restartSound: Int,
+    onChangeStartSound: (Int) -> Unit,
+    onChangeBreakTimeSound: (Int) -> Unit,
 ) {
     var isExpandStartSoundDropdown by remember { mutableStateOf(false) }
-    var isExpandRestartSoundDropdown by remember { mutableStateOf(false) }
-    val startSoundList = listOf("Chime", "Bell", "Beep")
-    val restartSoundList = listOf("Chime", "Bell", "Beep")
+    var isExpandBreakTimeSoundDropdown by remember { mutableStateOf(false) }
+    val startSoundList = listOf(
+        Pair("buzzer", R.raw.buzzer ),
+        Pair("game over", R.raw.game_over ),
+        Pair("sneeze", R.raw.sneeze ),
+    )
+    val restartSoundList = listOf(
+        Pair("buzzer", R.raw.buzzer ),
+        Pair("game over", R.raw.game_over ),
+        Pair("sneeze", R.raw.sneeze ),
+    )
     Column(
         modifier = Modifier.wrapContentHeight().fillMaxWidth().padding(vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(15.dp),
@@ -59,42 +65,44 @@ fun SoundEditBox(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = stringResource(R.string.expire_mode),
+                text = stringResource(R.string.sound_setting),
                 style = CustomTheme.typography.editTitleSmall,
                 color = CustomTheme.colors.text,
             )
             Row(
-                modifier = Modifier.fillMaxWidth().height(32.dp).background(
+                modifier = Modifier.fillMaxWidth(0.8f).height(32.dp).background(
                     color = CustomTheme.colors.selectorContainer,
                     shape = RoundedCornerShape(12.dp)
                 ),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ExpireMode.entries.forEachIndexed { i, mode ->
+                SoundMode.entries.forEachIndexed { i, mode ->
                     Box(
                         modifier = Modifier.background(
-                            color = if(mode == expireMode) CustomTheme.colors.selectorContainerSelected else Color.Transparent,
+                            color = if(mode == soundMode) CustomTheme.colors.selectorContainerSelected else Color.Transparent,
                             shape = RoundedCornerShape(12.dp)
                         ).weight(1f).padding(vertical = 4.dp).clickable(
-                            onClick = { onClickExpireMode(mode) }
+                            onClick = { onClickSoundMode(mode) },
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
                         ),
                         contentAlignment = Alignment.Center
                     ){
                         when(mode){
-                            ExpireMode.NO_SOUND -> Text(
+                            SoundMode.NO_SOUND -> Text(
                                 text = stringResource(R.string.no_sound),
-                                style = if(mode == expireMode) CustomTheme.typography.selectorSelected else CustomTheme.typography.selectorUnSelected,
+                                style = if(mode == soundMode) CustomTheme.typography.selectorSelected else CustomTheme.typography.selectorUnSelected,
                                 color = CustomTheme.colors.selectorTextSelected
                             )
-                            ExpireMode.VIBRATE -> Text(
+                            SoundMode.VIBRATE -> Text(
                                 text = stringResource(R.string.vibrate),
-                                style = if(mode == expireMode) CustomTheme.typography.selectorSelected else CustomTheme.typography.selectorUnSelected,
+                                style = if(mode == soundMode) CustomTheme.typography.selectorSelected else CustomTheme.typography.selectorUnSelected,
                                 color = CustomTheme.colors.selectorTextSelected
                             )
-                            ExpireMode.SOUND -> Text(
+                            SoundMode.SOUND -> Text(
                                 text = stringResource(R.string.sound),
-                                style = if(mode == expireMode) CustomTheme.typography.selectorSelected else CustomTheme.typography.selectorUnSelected,
+                                style = if(mode == soundMode) CustomTheme.typography.selectorSelected else CustomTheme.typography.selectorUnSelected,
                                 color = CustomTheme.colors.selectorTextSelected
                             )
                         }
@@ -135,9 +143,9 @@ fun SoundEditBox(
                 contentAlignment = Alignment.Center
             ){
                 Text(
-                    text = startSound,
+                    text = startSoundList.first { it.second == startSound }.first,
                     style = CustomTheme.typography.textField,
-                    color = CustomTheme.colors.text,
+                    color = CustomTheme.colors.selectorTextSelected,
                 )
                 DropdownMenu(
                     modifier = Modifier.fillMaxWidth(0.8f).background(
@@ -150,7 +158,7 @@ fun SoundEditBox(
                     },
                     shape = RoundedCornerShape(12.dp),
                 ) {
-                    startSoundList.forEach {
+                    startSoundList.forEach{
                         DropdownMenuItem(
                             modifier = Modifier.fillMaxWidth().height(32.dp).background(
                                 color = CustomTheme.colors.textFieldContainer,
@@ -159,15 +167,15 @@ fun SoundEditBox(
                             text = {
                                 Text(
                                     modifier = Modifier.fillMaxWidth(),
-                                    text = it,
+                                    text = it.first,
                                     style = CustomTheme.typography.textField,
-                                    color = CustomTheme.colors.text,
+                                    color = CustomTheme.colors.selectorTextSelected,
                                     textAlign = TextAlign.Center
                                 )
                             },
                             onClick = {
                                 isExpandStartSoundDropdown = false
-                                onChangeStartSound(it)
+                                onChangeStartSound(it.second)
                             },
                         )
                         if(it != startSoundList.last()){
@@ -190,7 +198,7 @@ fun SoundEditBox(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = stringResource(R.string.restart_sound),
+                text = stringResource(R.string.break_time_sound),
                 style = CustomTheme.typography.editTitleSmall,
                 color = CustomTheme.colors.text,
             )
@@ -200,24 +208,24 @@ fun SoundEditBox(
                     shape = RoundedCornerShape(12.dp)
                 ).clickable(
                     onClick = {
-                        isExpandRestartSoundDropdown = true
+                        isExpandBreakTimeSoundDropdown = true
                     }
                 ),
                 contentAlignment = Alignment.Center
             ){
                 Text(
-                    text = restartSound,
+                    text = restartSoundList.first { it.second == restartSound }.first,
                     style = CustomTheme.typography.textField,
-                    color = CustomTheme.colors.text,
+                    color = CustomTheme.colors.selectorTextSelected,
                 )
                 DropdownMenu(
                     modifier = Modifier.fillMaxWidth(0.8f).background(
                         color = CustomTheme.colors.textFieldContainer,
                         shape = RoundedCornerShape(12.dp)
                     ),
-                    expanded = isExpandRestartSoundDropdown,
+                    expanded = isExpandBreakTimeSoundDropdown,
                     onDismissRequest = {
-                        isExpandRestartSoundDropdown = false
+                        isExpandBreakTimeSoundDropdown = false
                     },
                     shape = RoundedCornerShape(12.dp),
                 ) {
@@ -230,15 +238,15 @@ fun SoundEditBox(
                             text = {
                                 Text(
                                     modifier = Modifier.fillMaxWidth(),
-                                    text = it,
+                                    text = it.first,
                                     style = CustomTheme.typography.textField,
-                                    color = CustomTheme.colors.text,
+                                    color = CustomTheme.colors.selectorTextSelected,
                                     textAlign = TextAlign.Center
                                 )
                             },
                             onClick = {
-                                isExpandRestartSoundDropdown = false
-                                onChangeRestartSound(it)
+                                isExpandBreakTimeSoundDropdown = false
+                                onChangeBreakTimeSound(it.second)
                             },
                         )
                         if(it != restartSoundList.last()){
@@ -254,7 +262,7 @@ fun SoundEditBox(
     }
 }
 
-enum class ExpireMode {
+enum class SoundMode {
     NO_SOUND,
     VIBRATE,
     SOUND
@@ -266,12 +274,12 @@ enum class ExpireMode {
 fun SoundEditBoxPreview() {
     MyTheme {
         SoundEditBox(
-            expireMode = ExpireMode.SOUND,
-            onClickExpireMode = {},
-            startSound = "Chime",
-            restartSound = "Bell",
+            soundMode = SoundMode.SOUND,
+            onClickSoundMode = {},
+            startSound = 0,
+            restartSound = 0,
             onChangeStartSound = {},
-            onChangeRestartSound = {},
+            onChangeBreakTimeSound = {},
         )
     }
 }
