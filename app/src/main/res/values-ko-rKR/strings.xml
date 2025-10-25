@@ -15,9 +15,9 @@
     <string name="hours">시</string>
     <string name="minutes">분</string>
     <string name="seconds">초</string>
-    <string name="expire_mode">만료 모드</string>
+    <string name="sound_setting">음성 설정</string>
     <string name="start_sound">시작 음성</string>
-    <string name="restart_sound">재시작 음성</string>
+    <string name="break_time_sound">쉬는 시간 음성</string>
     <string name="background_color">배경 색상</string>
     <string name="type">타입</string>
     <string name="pause">중단</string>
@@ -25,4 +25,6 @@
     <string name="no_sound">무음</string>
     <string name="vibrate">진동</string>
     <string name="sound">소리 있음</string>
+    <string name="hand_color">분침 색상</string>
+    <string name="edge_color">테두리 색상</string>
 </resources>
