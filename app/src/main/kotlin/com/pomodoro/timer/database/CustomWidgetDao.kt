@@ -35,11 +35,13 @@ interface CustomWidgetDao {
             gap = CASE WHEN :gap IS NOT NULL THEN :gap ELSE gap END,
             breakTime = CASE WHEN :breakTime IS NOT NULL THEN :breakTime ELSE breakTime END,
             startSound = CASE WHEN :startSound IS NOT NULL THEN :startSound ELSE startSound END,
-            restartSound = CASE WHEN :restartSound IS NOT NULL THEN :restartSound ELSE restartSound END,
-            expireMode = CASE WHEN :expireMode IS NOT NULL THEN :expireMode ELSE expireMode END,
+            breakTimeSound = CASE WHEN :breakTimeSound IS NOT NULL THEN :breakTimeSound ELSE breakTimeSound END,
+            soundMode = CASE WHEN :soundMode IS NOT NULL THEN :soundMode ELSE soundMode END,
             repeat = CASE WHEN :repeat IS NOT NULL THEN :repeat ELSE repeat END,
             fgColor = CASE WHEN :fgColor IS NOT NULL THEN :fgColor ELSE fgColor END,
-            bgColor = CASE WHEN :bgColor IS NOT NULL THEN :bgColor ELSE bgColor END
+            bgColor = CASE WHEN :bgColor IS NOT NULL THEN :bgColor ELSE bgColor END,
+            handColor = CASE WHEN :handColor IS NOT NULL THEN :handColor ELSE handColor END,
+            edgeColor = CASE WHEN :edgeColor IS NOT NULL THEN :edgeColor ELSE edgeColor END
         WHERE id = :id
     """)
     suspend fun updateCustomWidget(
@@ -53,11 +55,13 @@ interface CustomWidgetDao {
         second: Int?,
         gap: Int?,
         breakTime: Int?,
-        startSound: String?,
-        restartSound: String?,
-        expireMode: Int?,
+        startSound: Int?,
+        breakTimeSound: Int?,
+        soundMode: Int?,
         repeat: Int?,
         fgColor: Color?,
-        bgColor: Color?
+        bgColor: Color?,
+        handColor: Color?,
+        edgeColor: Color?
     )
 }

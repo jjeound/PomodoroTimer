@@ -3,17 +3,17 @@ package com.pomodoro.timer.database.entity.mapper
 import androidx.core.net.toUri
 import com.pomodoro.timer.CustomWidget
 import com.pomodoro.timer.database.entity.CustomWidgetEntity
-import com.pomodoro.timer.presentation.common.ExpireMode
+import com.pomodoro.timer.presentation.common.SoundMode
 
 object CustomWidgetsEntityMapper : EntityMapper<List<CustomWidget>, List<CustomWidgetEntity>> {
 
 
   override fun asEntity(domain: List<CustomWidget>): List<CustomWidgetEntity> {
     return domain.map { domain ->
-      val expireMode = when(domain.expireMode){
-          ExpireMode.NO_SOUND -> 0
-          ExpireMode.VIBRATE -> 1
-          ExpireMode.SOUND -> 2
+      val soundMode = when(domain.soundMode){
+          SoundMode.NO_SOUND -> 0
+          SoundMode.VIBRATE -> 1
+          SoundMode.SOUND -> 2
       }
       CustomWidgetEntity(
         textStyle = domain.textStyle,
@@ -26,22 +26,24 @@ object CustomWidgetsEntityMapper : EntityMapper<List<CustomWidget>, List<CustomW
         gap = domain.gap,
         breakTime = domain.breakTime,
         startSound = domain.startSound,
-        restartSound = domain.restartSound,
-        expireMode = expireMode,
+        breakTimeSound = domain.breakTimeSound,
+        soundMode = soundMode,
         repeat = domain.repeat,
         fgColor = domain.fgColor,
-        bgColor = domain.bgColor
+        bgColor = domain.bgColor,
+        handColor = domain.handColor,
+        edgeColor = domain.edgeColor
       )
     }
   }
 
   override fun asDomain(entity: List<CustomWidgetEntity>): List<CustomWidget> {
     return entity.map { entity ->
-      val expireMode = when(entity.expireMode){
-          0 -> ExpireMode.NO_SOUND
-          1 -> ExpireMode.VIBRATE
-          2 -> ExpireMode.SOUND
-          else -> ExpireMode.NO_SOUND
+      val soundMode = when(entity.soundMode){
+          0 -> SoundMode.NO_SOUND
+          1 -> SoundMode.VIBRATE
+          2 -> SoundMode.SOUND
+          else -> SoundMode.NO_SOUND
       }
 
       CustomWidget(
@@ -56,11 +58,13 @@ object CustomWidgetsEntityMapper : EntityMapper<List<CustomWidget>, List<CustomW
         gap = entity.gap,
         breakTime = entity.breakTime,
         startSound = entity.startSound,
-        restartSound = entity.restartSound,
-        expireMode = expireMode,
+        breakTimeSound = entity.breakTimeSound,
+        soundMode = soundMode,
         repeat = entity.repeat,
         fgColor = entity.fgColor,
-        bgColor = entity.bgColor
+        bgColor = entity.bgColor,
+        handColor = entity.handColor,
+        edgeColor = entity.edgeColor
       )
     }
   }

@@ -2,10 +2,8 @@ package com.pomodoro.timer.database
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.text.TextStyle
 import androidx.room.ProvidedTypeConverter
 import androidx.room.TypeConverter
-import com.pomodoro.timer.ui.theme.customTypography
 import javax.inject.Inject
 
 @ProvidedTypeConverter

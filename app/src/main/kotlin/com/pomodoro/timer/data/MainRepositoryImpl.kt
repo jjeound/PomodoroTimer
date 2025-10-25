@@ -102,11 +102,13 @@ class MainRepositoryImpl @Inject constructor(
             entity.gap,
             entity.breakTime,
             entity.startSound,
-            entity.restartSound,
-            entity.expireMode,
+            entity.breakTimeSound,
+            entity.soundMode,
             entity.repeat,
             entity.fgColor,
-            entity.bgColor
+            entity.bgColor,
+            entity.handColor,
+            entity.edgeColor
         )
         emit(Unit)
     }.onStart {

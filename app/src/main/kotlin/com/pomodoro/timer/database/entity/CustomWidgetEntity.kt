@@ -18,10 +18,12 @@ data class CustomWidgetEntity(
     val second: Int,
     val gap: Int,
     val breakTime: Int,
-    val startSound: String,
-    val restartSound: String,
-    val expireMode: Int,
+    val startSound: Int,
+    val breakTimeSound: Int,
+    val soundMode: Int,
     val repeat: Int,
     val fgColor: Color,
-    val bgColor: Color
+    val bgColor: Color,
+    val handColor: Color,
+    val edgeColor: Color
 )
