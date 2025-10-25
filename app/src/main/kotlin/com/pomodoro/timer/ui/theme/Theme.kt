@@ -3,6 +3,8 @@ package com.pomodoro.timer.ui.theme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.LocalRippleConfiguration
+import androidx.compose.material3.RippleConfiguration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -38,6 +40,7 @@ fun MyTheme(
         LocalCustomColors provides colors,
         LocalBackgroundTheme provides background,
         LocalCustomTypography provides customTypography,
+        LocalRippleConfiguration provides RippleConfiguration(color = colors.rippledButtonBorder)
     ) {
         Box(
             modifier = Modifier
