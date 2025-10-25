@@ -24,8 +24,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pomodoro.timer.presentation.common.ColorFontEditBox
-import com.pomodoro.timer.presentation.common.ExpireMode
 import com.pomodoro.timer.presentation.common.SoundEditBox
+import com.pomodoro.timer.presentation.common.SoundMode
 import com.pomodoro.timer.presentation.common.TimerEditBox
 import com.pomodoro.timer.ui.theme.CustomTheme
 import com.pomodoro.timer.ui.theme.MyTheme
@@ -43,12 +43,12 @@ fun PomodoroTextEditBottomSheet(
     onChangeBreakTime: (Int) -> Unit,
     repeat: Int,
     onChangeRepeat: (Int) -> Unit,
-    expireMode: ExpireMode,
-    onClickExpireMode: (ExpireMode) -> Unit,
-    startSound: String,
-    onClickStartSound: (String) -> Unit,
-    restartSound: String,
-    onClickRestartSound: (String) -> Unit,
+    soundMode: SoundMode,
+    onClickSoundMode: (SoundMode) -> Unit,
+    startSound: Int,
+    onClickStartSound: (Int) -> Unit,
+    restartSound: Int,
+    onChangeBreakTimeSound: (Int) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = false,
@@ -93,12 +93,12 @@ fun PomodoroTextEditBottomSheet(
                     }
                     2 -> {
                         SoundEditBox(
-                            expireMode = expireMode,
-                            onClickExpireMode = onClickExpireMode,
+                            soundMode = soundMode,
+                            onClickSoundMode = onClickSoundMode,
                             startSound = startSound,
                             restartSound = restartSound,
                             onChangeStartSound = onClickStartSound,
-                            onChangeRestartSound = onClickRestartSound,
+                            onChangeBreakTimeSound = onChangeBreakTimeSound,
                         )
                     }
                 }
@@ -141,12 +141,12 @@ fun PomodoroTextEditBottomSheetPreview() {
             onChangeBreakTime = {},
             repeat = 0,
             onChangeRepeat = {},
-            expireMode = ExpireMode.SOUND,
-            onClickExpireMode = {},
-            startSound = "Yuck",
+            soundMode = SoundMode.SOUND,
+            onClickSoundMode = {},
+            startSound = 0,
             onClickStartSound = {},
-            restartSound = "Bell",
-            onClickRestartSound = {},
+            restartSound = 0,
+            onChangeBreakTimeSound = {},
         )
     }
 }

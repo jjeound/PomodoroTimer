@@ -1,7 +1,13 @@
 package com.pomodoro.timer.presentation.pomodoro
 
+import android.content.Context.VIBRATOR_MANAGER_SERVICE
+import android.content.Context.VIBRATOR_SERVICE
+import android.media.MediaPlayer
 import android.net.Uri
-import androidx.compose.foundation.BorderStroke
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,10 +22,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -32,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
@@ -46,6 +55,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.pomodoro.timer.CustomWidget
 import com.pomodoro.timer.R
+import com.pomodoro.timer.presentation.common.SoundMode
 import com.pomodoro.timer.ui.theme.CustomTheme
 import com.pomodoro.timer.ui.theme.MyTheme
 import kotlin.math.cos
@@ -79,9 +89,60 @@ fun PomodoroTimer(
             listOf("0", "5", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55")
         }
     }
+    val context = LocalContext.current
+    val vibrator = remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibManager = context.getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            vibManager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(VIBRATOR_SERVICE) as Vibrator
+        }
+    }
+    val vibrationEffect: (Long, Int) -> VibrationEffect = { duration, amplitude ->
+        VibrationEffect.createOneShot(duration, amplitude)
+    }
+    val mediaPlayer = remember {
+        listOf(MediaPlayer.create(context, widget.startSound), MediaPlayer.create(context, widget.breakTimeSound))
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer.forEach {
+                it.release()
+            }
+        }
+    }
     LaunchedEffect(editMode) {
         if(editMode && state == TimerState.RUNNING){
             viewModel.onPause()
+        }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is UiEvent.PlayStartSound -> {
+                    when(widget.soundMode){
+                        SoundMode.SOUND -> {
+                            mediaPlayer[0].start()
+                        }
+                        SoundMode.VIBRATE -> {
+                            vibrator.vibrate(vibrationEffect(150L, VibrationEffect.DEFAULT_AMPLITUDE))
+                        }
+                        SoundMode.NO_SOUND -> {}
+                    }
+                }
+                is UiEvent.PlayBreakSound -> {
+                    when(widget.soundMode){
+                        SoundMode.SOUND -> {
+                            mediaPlayer[1].start()
+                        }
+                        SoundMode.VIBRATE -> {
+                            vibrator.vibrate(vibrationEffect(300L, VibrationEffect.DEFAULT_AMPLITUDE))
+                        }
+                        SoundMode.NO_SOUND -> {}
+                    }
+                }
+            }
         }
     }
     PomodoroTimerContent(
@@ -97,7 +158,7 @@ fun PomodoroTimer(
         onEditText = onEditText,
         onEditContainer = onEditContainer,
         editMode = editMode,
-        showButtons = showButtons
+        showButtons = showButtons,
     )
 }
 
@@ -127,11 +188,12 @@ fun PomodoroTimerContent(
     val isLandscape = screenSize.width > screenSize.height
     val radius = (if (isLandscape) screenSize.height else screenSize.width) / 2 * 0.8f
     Box(modifier = modifier){
-        if(state == TimerState.IDLE){
-
-        }
         Box(
-            modifier = Modifier.align(Alignment.Center).border(
+            modifier = Modifier.align(
+                if(editMode) Alignment.TopCenter else Alignment.Center
+            ).padding(
+                top = if(editMode) 100.dp else 0.dp
+            ).border(
                 width = 3.dp,
                 color = if(editMode) CustomTheme.colors.indicatorBox else Color.Transparent,
                 shape = RoundedCornerShape(12.dp)
@@ -144,6 +206,8 @@ fun PomodoroTimerContent(
                 color = widget.fgColor,
                 bgColor = widget.bgColor,
                 fontColor = widget.fontColor,
+                handColor = widget.handColor,
+                edgeColor = widget.edgeColor,
                 image = widget.backgroundImage,
                 remainingTime = remainingTime,
                 editMode = editMode,
@@ -175,6 +239,8 @@ fun Timer(
     color: Color,
     fontColor: Color,
     bgColor: Color,
+    handColor: Color,
+    edgeColor: Color,
     image: Uri?,
     remainingTime: Int = 0,
     editMode: Boolean,
@@ -245,7 +311,8 @@ fun Timer(
                             .width(4.dp)
                             .graphicsLayer{
                                 rotationZ = angle + 90f
-                            }
+                            },
+                        tint = edgeColor
                     )
                 } else {
                     Icon(
@@ -255,7 +322,8 @@ fun Timer(
                             .width(4.dp)
                             .graphicsLayer{
                                 rotationZ = angle + 90f
-                            }
+                            },
+                        tint = edgeColor
                     )
                 }
             }
@@ -283,25 +351,23 @@ fun Timer(
                     interactionSource = remember { MutableInteractionSource() }
                 )
         ) {
-            drawArc(
-                color = bgColor,
-                startAngle = 0f,
-                sweepAngle = 360f,
-                useCenter = true,
+            drawCircle(
+                color = bgColor
             )
             drawArc(
-                color = color.copy(
-                    alpha = 0.9f
-                ),
+                color = color,
                 startAngle = -90f,
                 sweepAngle = if(editMode) -270f else sweepAngle,
                 useCenter = true,
             )
         }
         Icon(
-            imageVector = ImageVector.vectorResource(R.drawable.needle),
+            imageVector = ImageVector.vectorResource(R.drawable.handle),
             contentDescription = null,
-            modifier = Modifier.align(Alignment.Center).rotate(sweepAngle)
+            modifier = Modifier.align(Alignment.Center).rotate(
+                if(editMode) 0f else sweepAngle
+            ),
+            tint = handColor
         )
     }
 }
@@ -318,12 +384,14 @@ fun TimerButtons(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        OutlinedButton(
+        ElevatedButton(
             onClick = onReset,
-            border = BorderStroke(1.dp, CustomTheme.colors.buttonBorder),
             modifier = Modifier
                 .padding(vertical = 5.dp, horizontal = 10.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(12.dp)),
+            colors = ButtonDefaults.elevatedButtonColors(
+                containerColor = CustomTheme.colors.surface,
+            )
         ) {
             Text(
                 text = stringResource(id = R.string.reset),
@@ -331,7 +399,7 @@ fun TimerButtons(
                 style = CustomTheme.typography.buttonTimerSmall
             )
         }
-        OutlinedButton(
+        ElevatedButton(
             onClick = {
                 when(state){
                     TimerState.IDLE -> onStart()
@@ -340,10 +408,12 @@ fun TimerButtons(
                     TimerState.BREAK -> onStart()
                 }
             },
-            border = BorderStroke(1.dp, CustomTheme.colors.buttonBorder),
             modifier = Modifier
                 .padding(vertical = 5.dp, horizontal = 10.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(12.dp)),
+            colors = ButtonDefaults.elevatedButtonColors(
+                containerColor = CustomTheme.colors.surface,
+            ),
         ) {
             when(state){
                 TimerState.IDLE -> Text(
@@ -380,5 +450,13 @@ fun PomodoroTimerContentPreview() {
             minutesTxt = listOf("15", "20", "25", "30", "35", "40", "45", "50", "55", "0", "5", "10"),
             editMode = true
         )
+    }
+}
+
+@Preview
+@Composable
+fun TimerButtonsPreview() {
+    MyTheme {
+        TimerButtons(state = TimerState.IDLE)
     }
 }
