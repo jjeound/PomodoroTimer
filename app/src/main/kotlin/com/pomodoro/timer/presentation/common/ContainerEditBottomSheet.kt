@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -52,6 +51,8 @@ fun ContainerEditBottomSheet(
     onBackgroundColorClick: (Color) -> Unit,
     onAddImage: (Uri) -> Unit,
     onColorPickerClick: (index: Int) -> Unit,
+    onHandColorClick: (Color) -> Unit,
+    onEdgeColorClick: (Color) -> Unit,
 ) {
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(
@@ -109,105 +110,107 @@ fun ContainerEditBottomSheet(
             modifier = Modifier.wrapContentHeight().padding(vertical = 30.dp),
             verticalArrangement = Arrangement.spacedBy(30.dp),
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.color),
-                    style = CustomTheme.typography.editTitleSmall,
-                    color = CustomTheme.colors.text,
-                )
-                Row(
-                    modifier = Modifier.wrapContentWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(24.dp)
-                ) {
-                    for (colorPair in colors) {
-                        ColorBox(
-                            containerColor = colorPair.first,
-                            borderColor = colorPair.second,
-                            onClick = { onColorClick(colorPair.first) }
-                        )
-                    }
-                    Box(
-                        modifier = Modifier.size(30.dp).clickable(
-                            onClick = {
-                                onColorPickerClick(0)
-                            }
-                        )
-                    ){
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.rainbow),
-                            contentDescription = null,
-                            tint = Color.Unspecified
-                        )
-                    }
+            ColorEditForm(
+                title = R.string.color,
+                colors = colors,
+                onColorClick = onColorClick,
+                onColorPickerClick = {
+                    onColorPickerClick(0)
                 }
+            )
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = CustomTheme.colors.divider
+            )
+            ColorEditForm(
+                title = R.string.background_color,
+                colors = colors,
+                onColorClick = onBackgroundColorClick,
+                onColorPickerClick = {
+                    onColorPickerClick(1)
+                }
+            ){
+                ImagePicker(
+                    onClick = {
+                        if (galleryPermissions.all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
+                            albumLauncher.launch(imageAlbumIntent)
+                        } else {
+                            requestPermissionLauncher.launch(galleryPermissions)
+                        }
+                    }
+                )
             }
             HorizontalDivider(
                 thickness = 1.dp,
                 color = CustomTheme.colors.divider
             )
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.background_color),
-                    style = CustomTheme.typography.editTitleSmall,
-                    color = CustomTheme.colors.text,
-                )
-                Row(
-                    modifier = Modifier.wrapContentWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(24.dp)
-                ) {
-                    for (colorPair in colors) {
-                        ColorBox(
-                            containerColor = colorPair.first,
-                            borderColor = colorPair.second,
-                            onClick = { onBackgroundColorClick(colorPair.first) }
-                        )
-                    }
-                    Box(
-                        modifier = Modifier.size(30.dp).clickable(
-                            onClick = {
-                                onColorPickerClick(1)
-                            }
-                        )
-                    ){
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.rainbow),
-                            contentDescription = null,
-                            tint = Color.Unspecified
-                        )
-                    }
-                    Box(
-                        modifier = Modifier.size(30.dp)
-                            .border(
-                                width = 1.dp,
-                                color = CustomTheme.colors.buttonBorder,
-                                shape = CircleShape
-                            ).clickable(
-                                onClick = {
-                                    if (galleryPermissions.all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
-                                        albumLauncher.launch(imageAlbumIntent)
-                                    } else {
-                                        requestPermissionLauncher.launch(galleryPermissions)
-                                    }
-                                }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ){
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.plus),
-                            contentDescription = null,
-                            tint = Color.Unspecified
-                        )
-                    }
+            ColorEditForm(
+                title = R.string.hand_color,
+                colors = colors,
+                onColorClick = onHandColorClick,
+                onColorPickerClick = {
+                    onColorPickerClick(2)
                 }
+            )
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = CustomTheme.colors.divider
+            )
+            ColorEditForm(
+                title = R.string.edge_color,
+                colors = colors,
+                onColorClick = onEdgeColorClick,
+                onColorPickerClick = {
+                    onColorPickerClick(3)
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun ColorEditForm(
+    title: Int,
+    colors: List<Pair<Color, Color>>,
+    onColorClick: (Color) -> Unit,
+    onColorPickerClick: () -> Unit,
+    content: (@Composable () -> Unit)? = null,
+){
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = stringResource(title),
+            style = CustomTheme.typography.editTitleSmall,
+            color = CustomTheme.colors.text,
+        )
+        Row(
+            modifier = Modifier.wrapContentWidth(),
+            horizontalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            for (colorPair in colors) {
+                ColorBox(
+                    containerColor = colorPair.first,
+                    borderColor = colorPair.second,
+                    onClick = { onColorClick(colorPair.first) }
+                )
             }
+            Box(
+                modifier = Modifier.size(30.dp).clickable(
+                    onClick = {
+                        onColorPickerClick()
+                    }
+                )
+            ){
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.rainbow),
+                    contentDescription = null,
+                    tint = Color.Unspecified
+                )
+            }
+            content?.invoke()
         }
     }
 }
@@ -233,6 +236,28 @@ fun ColorBox(
     )
 }
 
+@Composable
+fun ImagePicker(
+    onClick: () -> Unit
+){
+    Box(
+        modifier = Modifier.size(30.dp)
+            .border(
+                width = 1.dp,
+                color = CustomTheme.colors.buttonBorder,
+                shape = CircleShape
+            ).clickable(
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ){
+        Icon(
+            imageVector = ImageVector.vectorResource(R.drawable.plus),
+            contentDescription = null,
+            tint = CustomTheme.colors.icon
+        )
+    }
+}
 
 
 
@@ -248,7 +273,9 @@ fun ContainerEditBottomSheetPreview() {
             onColorClick = {},
             onBackgroundColorClick = {},
             onAddImage = {},
-            onColorPickerClick = {}
+            onColorPickerClick = {},
+            onHandColorClick = {},
+            onEdgeColorClick = {},
         )
     }
 }
