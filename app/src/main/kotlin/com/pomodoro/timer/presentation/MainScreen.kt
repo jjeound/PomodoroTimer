@@ -10,11 +10,14 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -29,10 +32,12 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -43,6 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.github.skydoves.colorpicker.compose.AlphaSlider
+import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.ColorEnvelope
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
@@ -67,6 +74,7 @@ fun MainScreen(
     val config = LocalConfiguration.current
     val isTablet = config.smallestScreenWidthDp >= 600
     val editable = isTablet || config.orientation == Configuration.ORIENTATION_PORTRAIT //탭은 다 가능, 폰은 세로모드에서만 가능
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -130,7 +138,7 @@ fun MainScreenContentPhone(
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
-        if (editMode && !showTextEditBottomSheet && !showContainerEditBottomSheet) {
+        if (editMode && !showTextEditBottomSheet && !showContainerEditBottomSheet && !showColorPicker) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -194,8 +202,11 @@ fun MainScreenContentPhone(
             state = pagerState,
             userScrollEnabled = editMode
         ) { page ->
-            LaunchedEffect(page) {
-                onNextWidget(page)
+            LaunchedEffect(pagerState) {
+                snapshotFlow { pagerState.currentPage }
+                    .collect { page ->
+                        onNextWidget(page)
+                    }
             }
             PomodoroTimer(
                 modifier = Modifier.fillMaxSize(),
@@ -207,7 +218,7 @@ fun MainScreenContentPhone(
                 onEditContainer = {
                     showContainerEditBottomSheet = true
                 },
-                showButtons = showButtons
+                showButtons = showButtons,
             )
 //            when(mode){
 //                0 -> {}
@@ -259,7 +270,7 @@ fun MainScreenContentPhone(
                         .padding(8.dp),
                     imageVector = ImageVector.vectorResource(R.drawable.plus),
                     contentDescription = null,
-                    tint = Color.Unspecified
+                    tint = CustomTheme.colors.icon
                 )
             }
         }
@@ -295,6 +306,20 @@ fun MainScreenContentPhone(
                     showColorPicker = true
                     showContainerEditBottomSheet = false
                     colorPickerOption = index
+                },
+                onHandColorClick = {
+                    editWidget(
+                        editingWidget.copy(
+                            handColor = it
+                        )
+                    )
+                },
+                onEdgeColorClick = {
+                    editWidget(
+                        editingWidget.copy(
+                            edgeColor = it
+                        )
+                    )
                 }
             )
         }
@@ -348,11 +373,11 @@ fun MainScreenContentPhone(
                                 )
                             )
                         },
-                        expireMode = editingWidget.expireMode,
-                        onClickExpireMode = {
+                        soundMode = editingWidget.soundMode,
+                        onClickSoundMode = {
                             editWidget(
                                 editingWidget.copy(
-                                    expireMode = it
+                                    soundMode = it
                                 )
                             )
                         },
@@ -364,11 +389,11 @@ fun MainScreenContentPhone(
                                 )
                             )
                         },
-                        restartSound = editingWidget.restartSound,
-                        onClickRestartSound = {
+                        restartSound = editingWidget.breakTimeSound,
+                        onChangeBreakTimeSound = {
                             editWidget(
                                 editingWidget.copy(
-                                    restartSound = it
+                                    breakTimeSound = it
                                 )
                             )
                         }
@@ -379,14 +404,14 @@ fun MainScreenContentPhone(
         if(showColorPicker){
             Box(
                 modifier = Modifier.align(Alignment.BottomCenter).padding(
-                    bottom = 40.dp
+                    bottom = 120.dp
                 )
             ) {
                 Icon(
                     modifier = Modifier.align(Alignment.TopEnd).clickable(
                         onClick = {
                             showColorPicker = false
-                            if( colorPickerOption == 2){
+                            if( colorPickerOption == 4){
                                 showTextEditBottomSheet = true
                             } else {
                                 showContainerEditBottomSheet = true
@@ -395,40 +420,75 @@ fun MainScreenContentPhone(
                     ),
                     imageVector = ImageVector.vectorResource(R.drawable.close),
                     contentDescription = null,
-                    tint = Color.Unspecified
+                    tint = CustomTheme.colors.icon
                 )
-                HsvColorPicker(
+                Column(
                     modifier = Modifier
-                        .size(200.dp)
-                        .padding(10.dp),
-                    controller = controller,
-                    onColorChanged = { colorEnvelope: ColorEnvelope ->
-                        when (colorPickerOption) {
-                            0 -> {
-                                editWidget(
-                                    editingWidget.copy(
-                                        fgColor = Color(colorEnvelope.hexCode.toLong(16))
+                        .wrapContentSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    HsvColorPicker(
+                        modifier = Modifier
+                            .size(200.dp)
+                            .padding(10.dp),
+                        controller = controller,
+                        onColorChanged = { colorEnvelope: ColorEnvelope ->
+                            when (colorPickerOption) {
+                                0 -> {
+                                    editWidget(
+                                        editingWidget.copy(
+                                            fgColor = Color(colorEnvelope.hexCode.toLong(16))
+                                        )
                                     )
-                                )
-                            }
-                            1 -> {
-                                editWidget(
-                                    editingWidget.copy(
-                                        bgColor = Color(colorEnvelope.hexCode.toLong(16)),
-                                        backgroundImage = null
+                                }
+                                1 -> {
+                                    editWidget(
+                                        editingWidget.copy(
+                                            bgColor = Color(colorEnvelope.hexCode.toLong(16)),
+                                            backgroundImage = null
+                                        )
                                     )
-                                )
-                            }
-                            2 -> {
-                                editWidget(
-                                    editingWidget.copy(
-                                        fontColor = Color(colorEnvelope.hexCode.toLong(16))
+                                }
+                                2 -> {
+                                    editWidget(
+                                        editingWidget.copy(
+                                            handColor = Color(colorEnvelope.hexCode.toLong(16))
+                                        )
                                     )
-                                )
+                                }
+                                3 -> {
+                                    editWidget(
+                                        editingWidget.copy(
+                                            edgeColor = Color(colorEnvelope.hexCode.toLong(16))
+                                        )
+                                    )
+                                }
+                                4 -> {
+                                    editWidget(
+                                        editingWidget.copy(
+                                            fontColor = Color(colorEnvelope.hexCode.toLong(16))
+                                        )
+                                    )
+                                }
                             }
                         }
-                    }
-                )
+                    )
+                    AlphaSlider(
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f)
+                            .padding(10.dp)
+                            .height(35.dp),
+                        controller = controller,
+                    )
+                    BrightnessSlider(
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f)
+                            .padding(10.dp)
+                            .height(35.dp),
+                        controller = controller,
+                    )
+                }
             }
         }
     }
