@@ -32,6 +32,7 @@ data class CustomColors(
     val selectorDivider: Color,
     val selectorContainer: Color,
     val selectorContainerSelected: Color,
+    val icon: Color
 )
 
 val LightCustomColors = CustomColors(
@@ -53,6 +54,7 @@ val LightCustomColors = CustomColors(
     selectorDivider = Grey500,
     selectorContainer = Grey400,
     selectorContainerSelected = White,
+    icon = Black
 )
 val DarkCustomColors = CustomColors(
     surface = Black,
@@ -72,5 +74,6 @@ val DarkCustomColors = CustomColors(
     selectorTextUnselected = Black,
     selectorDivider = Grey500,
     selectorContainer = Grey400,
-    selectorContainerSelected = Black
+    selectorContainerSelected = White,
+    icon = White
 )
