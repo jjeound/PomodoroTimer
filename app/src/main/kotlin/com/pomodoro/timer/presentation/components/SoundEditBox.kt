@@ -1,4 +1,4 @@
-package com.pomodoro.timer.presentation.common
+package com.pomodoro.timer.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,6 +31,7 @@ import com.pomodoro.timer.ui.theme.CustomTheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.pomodoro.timer.data.model.SoundMode
 import com.pomodoro.timer.ui.theme.MyTheme
 
 @Composable
@@ -260,12 +261,6 @@ fun SoundEditBox(
             }
         }
     }
-}
-
-enum class SoundMode {
-    NO_SOUND,
-    VIBRATE,
-    SOUND
 }
 
 

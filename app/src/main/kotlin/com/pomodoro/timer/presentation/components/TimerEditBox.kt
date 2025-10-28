@@ -1,4 +1,4 @@
-package com.pomodoro.timer.presentation.common
+package com.pomodoro.timer.presentation.components
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background

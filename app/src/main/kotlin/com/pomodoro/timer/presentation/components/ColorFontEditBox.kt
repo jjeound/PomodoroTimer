@@ -1,4 +1,4 @@
-package com.pomodoro.timer.presentation.common
+package com.pomodoro.timer.presentation.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,18 +26,14 @@ fun ColorFontEditBox(
     onColorClick: (Color) -> Unit,
     onColorPickerClick: (index: Int) -> Unit,
     onFontClick: (TextStyle) -> Unit,
+    currentColor: Color,
+    colors: List<Color>,
 ) {
     val textStyles = listOf(
         customTypography.textPreview1,
         customTypography.textPreview2,
         customTypography.textPreview3,
         customTypography.textPreview4,
-    )
-    val colors = listOf(
-        Pair(Color(0xFFF94C5E), Color(0xFFE83B4D)),
-        Pair(Color(0xFF9AC1F0), Color(0xFF89B0E0)),
-        Pair(Color(0xFF72FA93), Color(0xFF61E982)),
-        Pair(Color(0xFFF6C445), Color(0xFFE5B334)),
     )
     Column(
         modifier = Modifier.wrapContentHeight().fillMaxWidth().padding(vertical = 10.dp),
@@ -50,7 +46,8 @@ fun ColorFontEditBox(
             onColorClick = onColorClick,
             onColorPickerClick = {
                 onColorPickerClick(4)
-            }
+            },
+            currentColor = currentColor
         )
         HorizontalDivider(
             thickness = 1.dp,
