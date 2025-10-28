@@ -1,4 +1,4 @@
-package com.pomodoro.timer.database
+package com.pomodoro.timer.database.typeConverter
 
 import androidx.compose.ui.text.TextStyle
 import androidx.room.ProvidedTypeConverter

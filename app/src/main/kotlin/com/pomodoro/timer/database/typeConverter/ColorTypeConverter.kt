@@ -1,4 +1,4 @@
-package com.pomodoro.timer.database
+package com.pomodoro.timer.database.typeConverter
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
