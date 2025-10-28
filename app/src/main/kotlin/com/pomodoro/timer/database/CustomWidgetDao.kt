@@ -6,6 +6,9 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.pomodoro.timer.data.model.BgMode
+import com.pomodoro.timer.data.model.Mode
+import com.pomodoro.timer.data.model.SoundMode
 import com.pomodoro.timer.database.entity.CustomWidgetEntity
 
 @Dao
@@ -41,7 +44,8 @@ interface CustomWidgetDao {
             fgColor = CASE WHEN :fgColor IS NOT NULL THEN :fgColor ELSE fgColor END,
             bgColor = CASE WHEN :bgColor IS NOT NULL THEN :bgColor ELSE bgColor END,
             handColor = CASE WHEN :handColor IS NOT NULL THEN :handColor ELSE handColor END,
-            edgeColor = CASE WHEN :edgeColor IS NOT NULL THEN :edgeColor ELSE edgeColor END
+            edgeColor = CASE WHEN :edgeColor IS NOT NULL THEN :edgeColor ELSE edgeColor END,
+            bgMode = CASE WHEN :bgMode IS NOT NULL THEN :bgMode ELSE bgMode END
         WHERE id = :id
     """)
     suspend fun updateCustomWidget(
@@ -49,7 +53,7 @@ interface CustomWidgetDao {
         textStyle: TextStyle?,
         fontColor: Color?,
         backgroundImage: String?,
-        mode: Int?,
+        mode: Mode?,
         hour: Int?,
         minute: Int?,
         second: Int?,
@@ -57,11 +61,12 @@ interface CustomWidgetDao {
         breakTime: Int?,
         startSound: Int?,
         breakTimeSound: Int?,
-        soundMode: Int?,
+        soundMode: SoundMode?,
         repeat: Int?,
         fgColor: Color?,
         bgColor: Color?,
         handColor: Color?,
-        edgeColor: Color?
+        edgeColor: Color?,
+        bgMode: BgMode?
     )
 }
