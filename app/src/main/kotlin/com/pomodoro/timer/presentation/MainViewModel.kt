@@ -3,12 +3,14 @@ package com.pomodoro.timer.presentation
 import android.util.Log
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pomodoro.timer.CustomWidget
+import com.pomodoro.timer.data.model.CustomWidget
 import com.pomodoro.timer.data.MainRepository
+import com.pomodoro.timer.data.model.Mode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,11 +38,17 @@ class MainViewModel @Inject constructor(
     private val _editingWidget: MutableStateFlow<CustomWidget> = MutableStateFlow(CustomWidget())
     val editingWidget = _editingWidget.asStateFlow()
 
-    var mode by mutableIntStateOf(0)
+    private val _colors: MutableStateFlow<List<Color>> = MutableStateFlow(listOf(
+        Color(0xFFF94C5E), Color(0xFF9AC1F0), Color(0xFF72FA93), Color(0xFFF6C445)
+    ))
+    val colors = _colors.asStateFlow()
+
+    var mode by mutableStateOf(Mode.POMODORO)
         private set
 
     init {
         getWidgets()
+        getColors()
     }
 
     fun getWidgets(){
@@ -126,6 +134,47 @@ class MainViewModel @Inject constructor(
                 onError = { message -> uiState.value = MainUiState.Error("다시 삭제해주세요")
                     Log.d("MainViewModel", "deleteWidget: $message")
                 }
+            ).collect()
+        }
+    }
+
+    fun getColors(){
+        viewModelScope.launch {
+            repository.getAllColors(
+                onStart = { uiState.value = MainUiState.Loading },
+                onComplete = {  uiState.value = MainUiState.Idle},
+                onError = { message -> uiState.value = MainUiState.Error("다시 실행해주세요")
+                    Log.d("MainViewModel", "getColors: $message") }
+            ).collect {
+                _colors.value = _colors.value + it
+            }
+        }
+    }
+
+    fun saveColor(color: Color){
+        viewModelScope.launch {
+            repository.saveColor(
+                color = color,
+                onStart = { uiState.value = MainUiState.Loading },
+                onComplete = {
+                    _colors.value = _colors.value + color
+                },
+                onError = { message -> uiState.value = MainUiState.Error("다시 저장해주세요")
+                    Log.d("MainViewModel", "saveColor: $message") }
+            ).collect()
+        }
+    }
+
+    fun deleteColor(color: Color){
+        viewModelScope.launch {
+            repository.deleteColor(
+                color = color,
+                onStart = { uiState.value = MainUiState.Loading },
+                onComplete = {
+                    _colors.value = _colors.value.filterNot { it == color }
+                },
+                onError = { message -> uiState.value = MainUiState.Error("다시 삭제해주세요")
+                    Log.d("MainViewModel", "deleteColor: $message") }
             ).collect()
         }
     }
