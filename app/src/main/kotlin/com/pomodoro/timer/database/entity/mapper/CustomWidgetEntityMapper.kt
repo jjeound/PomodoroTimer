@@ -1,18 +1,12 @@
 package com.pomodoro.timer.database.entity.mapper
 
 import androidx.core.net.toUri
-import com.pomodoro.timer.CustomWidget
+import com.pomodoro.timer.data.model.CustomWidget
 import com.pomodoro.timer.database.entity.CustomWidgetEntity
-import com.pomodoro.timer.presentation.common.SoundMode
 
 object CustomWidgetEntityMapper : EntityMapper<CustomWidget, CustomWidgetEntity> {
 
   override fun asEntity(domain: CustomWidget): CustomWidgetEntity {
-    val soundMode = when(domain.soundMode){
-        SoundMode.NO_SOUND -> 0
-        SoundMode.VIBRATE -> 1
-        SoundMode.SOUND -> 2
-    }
 
     return CustomWidgetEntity(
       textStyle = domain.textStyle,
@@ -26,23 +20,17 @@ object CustomWidgetEntityMapper : EntityMapper<CustomWidget, CustomWidgetEntity>
       breakTime = domain.breakTime,
       startSound = domain.startSound,
       breakTimeSound = domain.breakTimeSound,
-      soundMode = soundMode,
+      soundMode = domain.soundMode,
       repeat = domain.repeat,
       fgColor = domain.fgColor,
       bgColor = domain.bgColor,
       handColor = domain.handColor,
-      edgeColor = domain.edgeColor
+      edgeColor = domain.edgeColor,
+      bgMode = domain.bgMode
     )
   }
 
   override fun asDomain(entity: CustomWidgetEntity): CustomWidget {
-    val soundMode = when(entity.soundMode){
-        0 -> SoundMode.NO_SOUND
-        1 -> SoundMode.VIBRATE
-        2 -> SoundMode.SOUND
-        else -> SoundMode.NO_SOUND
-    }
-
     return CustomWidget(
       id = entity.id,
       textStyle = entity.textStyle,
@@ -56,12 +44,13 @@ object CustomWidgetEntityMapper : EntityMapper<CustomWidget, CustomWidgetEntity>
       breakTime = entity.breakTime,
       startSound = entity.startSound,
       breakTimeSound = entity.breakTimeSound,
-      soundMode = soundMode,
+      soundMode = entity.soundMode,
       repeat = entity.repeat,
       fgColor = entity.fgColor,
       bgColor = entity.bgColor,
       handColor = entity.handColor,
-      edgeColor = entity.edgeColor
+      edgeColor = entity.edgeColor,
+      bgMode = entity.bgMode
     )
   }
 }
