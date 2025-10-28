@@ -2,10 +2,14 @@ package com.pomodoro.timer.di
 
 import android.app.Application
 import androidx.room.Room
-import com.pomodoro.timer.database.ColorTypeConverter
+import com.pomodoro.timer.database.ColorDao
+import com.pomodoro.timer.database.typeConverter.ColorTypeConverter
 import com.pomodoro.timer.database.CustomWidgetDao
 import com.pomodoro.timer.database.PomodoroDatabase
-import com.pomodoro.timer.database.TextStyleTypeConverter
+import com.pomodoro.timer.database.typeConverter.BgModeTypeConverter
+import com.pomodoro.timer.database.typeConverter.ModeTypeConverter
+import com.pomodoro.timer.database.typeConverter.SoundModeTypeConverter
+import com.pomodoro.timer.database.typeConverter.TextStyleTypeConverter
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,12 +25,18 @@ object DatabaseModule {
     fun provideAppDatabase(
         application: Application,
         textStyleTypeConverter: TextStyleTypeConverter,
-        colorTypeConverter: ColorTypeConverter
+        colorTypeConverter: ColorTypeConverter,
+        modeTypeConverter: ModeTypeConverter,
+        soundModeTypeConverter: SoundModeTypeConverter,
+        bgModeTypeConverter: BgModeTypeConverter
     ): PomodoroDatabase {
         return Room
             .databaseBuilder(application, PomodoroDatabase::class.java, "PomodoroTimer.db")
             .addTypeConverter(textStyleTypeConverter)
             .addTypeConverter(colorTypeConverter)
+            .addTypeConverter(modeTypeConverter)
+            .addTypeConverter(soundModeTypeConverter)
+            .addTypeConverter(bgModeTypeConverter)
             .build()
     }
 
@@ -34,5 +44,11 @@ object DatabaseModule {
     @Singleton
     fun provideCustomWidgetDao(appDatabase: PomodoroDatabase): CustomWidgetDao {
         return appDatabase.customWidgetDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideColorDao(appDatabase: PomodoroDatabase): ColorDao {
+        return appDatabase.colorDao()
     }
 }
