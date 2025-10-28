@@ -1,12 +1,15 @@
 package com.pomodoro.timer.data
 
 import androidx.annotation.WorkerThread
+import androidx.compose.ui.graphics.Color
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
-import com.pomodoro.timer.CustomWidget
+import com.pomodoro.timer.data.model.CustomWidget
 import com.pomodoro.timer.data.PrefKeys.WIDGET_ID
+import com.pomodoro.timer.database.ColorDao
 import com.pomodoro.timer.database.CustomWidgetDao
+import com.pomodoro.timer.database.entity.ColorEntity
 import com.pomodoro.timer.database.entity.mapper.asDomain
 import com.pomodoro.timer.database.entity.mapper.asEntity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,6 +25,7 @@ import javax.inject.Inject
 
 class MainRepositoryImpl @Inject constructor(
     private val dao: CustomWidgetDao,
+    private val colorDao: ColorDao,
     private val dataStore: DataStore<Preferences>
 ): MainRepository {
 
@@ -108,7 +112,8 @@ class MainRepositoryImpl @Inject constructor(
             entity.fgColor,
             entity.bgColor,
             entity.handColor,
-            entity.edgeColor
+            entity.edgeColor,
+            entity.bgMode
         )
         emit(Unit)
     }.onStart {
@@ -151,6 +156,58 @@ class MainRepositoryImpl @Inject constructor(
         onError: (Throwable) -> Unit
     ): Flow<Unit> = flow {
         dao.deleteCustomWidget(id)
+        emit(Unit)
+    }.onStart {
+        onStart()
+    }.onEach {
+        onComplete()
+    }.catch { throwable ->
+        onError(throwable)
+        emit(Unit)
+    }
+
+    override fun saveColor(
+        color: Color,
+        onStart: () -> Unit,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit
+    ): Flow<Unit> = flow {
+        colorDao.insertColor(
+            ColorEntity(color)
+        )
+        emit(Unit)
+    }.onStart {
+        onStart()
+    }.onEach {
+        onComplete()
+    }.catch { throwable ->
+        onError(throwable)
+        emit(Unit)
+    }
+
+    override fun getAllColors(
+        onStart: () -> Unit,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit
+    ): Flow<List<Color>> = flow {
+        val colors = colorDao.getAllColors().map { it.color }
+        emit(colors)
+    }.onStart {
+        onStart()
+    }.onEach {
+        onComplete()
+    }.catch { throwable ->
+        onError(throwable)
+        emit(emptyList())
+    }
+
+    override fun deleteColor(
+        color: Color,
+        onStart: () -> Unit,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit
+    ) : Flow<Unit> = flow {
+        colorDao.deleteColor(color)
         emit(Unit)
     }.onStart {
         onStart()

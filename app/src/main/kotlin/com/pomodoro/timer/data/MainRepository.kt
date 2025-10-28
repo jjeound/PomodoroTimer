@@ -1,7 +1,8 @@
 package com.pomodoro.timer.data
 
 import androidx.annotation.WorkerThread
-import com.pomodoro.timer.CustomWidget
+import androidx.compose.ui.graphics.Color
+import com.pomodoro.timer.data.model.CustomWidget
 import kotlinx.coroutines.flow.Flow
 
 interface MainRepository {
@@ -38,6 +39,29 @@ interface MainRepository {
     @WorkerThread
     fun deleteWidget(
         id: Long,
+        onStart: () -> Unit,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ): Flow<Unit>
+
+    @WorkerThread
+    fun saveColor(
+        color: Color,
+        onStart: () -> Unit,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ): Flow<Unit>
+
+    @WorkerThread
+    fun getAllColors(
+        onStart: () -> Unit,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ): Flow<List<Color>>
+
+    @WorkerThread
+    fun deleteColor(
+        color: Color,
         onStart: () -> Unit,
         onComplete: () -> Unit,
         onError: (Throwable) -> Unit,
