@@ -18,7 +18,7 @@ interface MainRepository {
         onStart: () -> Unit,
         onComplete: () -> Unit,
         onError: (Throwable) -> Unit,
-    ): Flow<List<CustomWidget>?>
+    ): Flow<List<CustomWidget>>
 
     @WorkerThread
     fun updateWidget(
@@ -58,6 +58,15 @@ interface MainRepository {
         onComplete: () -> Unit,
         onError: (Throwable) -> Unit,
     ): Flow<List<Color>>
+
+    @WorkerThread
+    fun updateColor(
+        oldColor: Color,
+        newColor: Color,
+        onStart: () -> Unit,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ): Flow<Unit>
 
     @WorkerThread
     fun deleteColor(

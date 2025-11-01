@@ -59,7 +59,7 @@ class MainRepositoryImpl @Inject constructor(
         onStart: () -> Unit,
         onComplete: () -> Unit,
         onError: (Throwable) -> Unit
-    ): Flow<List<CustomWidget>?> {
+    ): Flow<List<CustomWidget>> {
         return dataStore.data
             .map { pref -> pref[WIDGET_ID] }
             .distinctUntilChanged()
@@ -69,7 +69,7 @@ class MainRepositoryImpl @Inject constructor(
                         it.id == (id ?: 0L)
                     }
                     if(widgets.isEmpty()){
-                        emit(null)
+                        emit(listOf(CustomWidget()))
                     } else {
                         emit(widgets)
                     }
@@ -166,6 +166,7 @@ class MainRepositoryImpl @Inject constructor(
         emit(Unit)
     }
 
+    @WorkerThread
     override fun saveColor(
         color: Color,
         onStart: () -> Unit,
@@ -185,6 +186,7 @@ class MainRepositoryImpl @Inject constructor(
         emit(Unit)
     }
 
+    @WorkerThread
     override fun getAllColors(
         onStart: () -> Unit,
         onComplete: () -> Unit,
@@ -201,6 +203,27 @@ class MainRepositoryImpl @Inject constructor(
         emit(emptyList())
     }
 
+    @WorkerThread
+    override fun updateColor(
+        oldColor: Color,
+        newColor: Color,
+        onStart: () -> Unit,
+        onComplete: () -> Unit,
+        onError: (Throwable) -> Unit
+    ): Flow<Unit> = flow {
+        colorDao.updateColor(oldColor, newColor)
+        emit(Unit)
+    }.onStart {
+        onStart()
+    }.onEach {
+        onComplete()
+    }.catch { throwable ->
+        onError(throwable)
+        emit(Unit)
+    }
+
+
+    @WorkerThread
     override fun deleteColor(
         color: Color,
         onStart: () -> Unit,
