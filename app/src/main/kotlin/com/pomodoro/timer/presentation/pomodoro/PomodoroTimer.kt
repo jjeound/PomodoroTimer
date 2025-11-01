@@ -71,9 +71,6 @@ fun PomodoroTimer(
     onEditText: () -> Unit,
     onEditContainer: () -> Unit,
     showButtons: Boolean,
-    pagerState: PagerState,
-    onAddNewWidget: () -> Unit,
-    widgetsSize: Int,
     viewModel: PomodoroViewModel = hiltViewModel()
 ){
     viewModel.setRP(widget.repeat)
@@ -164,9 +161,6 @@ fun PomodoroTimer(
         onEditContainer = onEditContainer,
         editMode = editMode,
         showButtons = showButtons,
-        pagerState = pagerState,
-        onAddNewWidget = onAddNewWidget,
-        widgetsSize = widgetsSize
     )
 }
 
@@ -185,9 +179,6 @@ fun PomodoroTimerContent(
     onEditContainer: () -> Unit = {},
     editMode: Boolean = false,
     showButtons: Boolean = true,
-    pagerState: PagerState,
-    onAddNewWidget: () -> Unit,
-    widgetsSize: Int,
 ){
     val windowInfo = LocalWindowInfo.current
     val screenSize = with(LocalDensity.current) {
@@ -236,52 +227,6 @@ fun PomodoroTimerContent(
                     onPause = onPause,
                     onReset = onReset,
                     onResume = onResume,
-                )
-            }
-        }
-        if (editMode) {
-            Row(
-                modifier = Modifier
-                    .padding(bottom = 40.dp).align(Alignment.BottomCenter),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                repeat(widgetsSize) { index ->
-                    val isFocused = pagerState.currentPage == index
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .size(if (isFocused) 10.dp else 8.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (isFocused) CustomTheme.colors.dotIndicatorFocused
-                                else CustomTheme.colors.dotIndicatorUnfocused
-                            )
-                    )
-                }
-            }
-            Box(
-                modifier = Modifier
-                    .padding(40.dp)
-                    .border(
-                        width = 1.dp,
-                        color = CustomTheme.colors.buttonBorder,
-                        shape = CircleShape
-                    ).align(Alignment.BottomEnd)
-                    .clickable(
-                        onClick = {
-                            onAddNewWidget()
-                        }
-                    ),
-                contentAlignment = Alignment.Center
-            ){
-                Icon(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .padding(8.dp),
-                    imageVector = ImageVector.vectorResource(R.drawable.plus),
-                    contentDescription = null,
-                    tint = CustomTheme.colors.icon
                 )
             }
         }
@@ -507,9 +452,6 @@ fun PomodoroTimerContentPreview() {
             widget = CustomWidget(),
             minutesTxt = listOf("15", "20", "25", "30", "35", "40", "45", "50", "55", "0", "5", "10"),
             editMode = true,
-            pagerState = rememberPagerState(0, pageCount = { 3 }),
-            onAddNewWidget = {},
-            widgetsSize = 3
         )
     }
 }
