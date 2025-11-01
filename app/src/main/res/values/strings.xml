@@ -26,4 +26,5 @@
     <string name="sound">Sound</string>
     <string name="hand_color">Hand Color</string>
     <string name="edge_color">Edge Color</string>
+    <string name="color_alert">you can\'t change this color</string>
 </resources>
