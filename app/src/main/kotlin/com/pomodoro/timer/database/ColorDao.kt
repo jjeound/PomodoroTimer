@@ -17,4 +17,7 @@ interface ColorDao {
 
     @Query("DELETE FROM color_table WHERE color = :color")
     suspend fun deleteColor(color: Color)
+
+    @Query("UPDATE color_table SET color = :newColor WHERE color = :oldColor")
+    suspend fun updateColor(oldColor: Color, newColor: Color)
 }
