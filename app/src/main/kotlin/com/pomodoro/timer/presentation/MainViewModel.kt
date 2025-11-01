@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pomodoro.timer.data.model.CustomWidget
@@ -60,9 +61,7 @@ class MainViewModel @Inject constructor(
                     Log.d("MainViewModel", "getWidgets: $message")
                 }
             ).collect {
-                _widgets.value = it ?: listOf(
-                    CustomWidget()
-                )
+                _widgets.value = it
                 _widgetsByMode.value = _widgets.value.filter { widget ->
                     widget.mode == mode
                 }
@@ -146,7 +145,7 @@ class MainViewModel @Inject constructor(
                 onError = { message -> uiState.value = MainUiState.Error("다시 실행해주세요")
                     Log.d("MainViewModel", "getColors: $message") }
             ).collect {
-                _colors.value = _colors.value + it
+                _colors.value += it
             }
         }
     }
@@ -155,12 +154,29 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             repository.saveColor(
                 color = color,
-                onStart = { uiState.value = MainUiState.Loading },
+                onStart = {  },
                 onComplete = {
-                    _colors.value = _colors.value + color
+                    _colors.value += color
                 },
                 onError = { message -> uiState.value = MainUiState.Error("다시 저장해주세요")
                     Log.d("MainViewModel", "saveColor: $message") }
+            ).collect()
+        }
+    }
+
+    fun updateColor(oldColor: Color, newColor: Color){
+        viewModelScope.launch {
+            repository.updateColor(
+                oldColor = oldColor,
+                newColor = newColor,
+                onStart = {  },
+                onComplete = {
+                    _colors.value = _colors.value.map {
+                        if(it == oldColor) newColor else it
+                    }
+                },
+                onError = { message -> uiState.value = MainUiState.Error("다시 수정해주세요")
+                    Log.d("MainViewModel", "updateColor: $message") }
             ).collect()
         }
     }
@@ -169,7 +185,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             repository.deleteColor(
                 color = color,
-                onStart = { uiState.value = MainUiState.Loading },
+                onStart = {  },
                 onComplete = {
                     _colors.value = _colors.value.filterNot { it == color }
                 },
