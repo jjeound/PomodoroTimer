@@ -1,7 +1,8 @@
 package com.pomodoro.timer.presentation
 
 import android.content.res.Configuration
-import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -12,15 +13,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.VerticalDivider
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,30 +31,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Devices.TABLET
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.window.core.layout.WindowSizeClass
-import com.github.skydoves.colorpicker.compose.AlphaSlider
-import com.github.skydoves.colorpicker.compose.BrightnessSlider
-import com.github.skydoves.colorpicker.compose.ColorEnvelope
-import com.github.skydoves.colorpicker.compose.HsvColorPicker
-import com.github.skydoves.colorpicker.compose.rememberColorPickerController
-import com.pomodoro.timer.data.model.CustomWidget
 import com.pomodoro.timer.R
+import com.pomodoro.timer.data.model.CustomWidget
 import com.pomodoro.timer.data.model.Mode
-import com.pomodoro.timer.presentation.components.ContainerEditBottomSheet
+import com.pomodoro.timer.presentation.components.ColorPicker
+import com.pomodoro.timer.presentation.components.ContainerEditSheet
 import com.pomodoro.timer.presentation.components.EditButtons
-import com.pomodoro.timer.presentation.components.TabletContainerEditBox
-import com.pomodoro.timer.presentation.pomodoro.PomodoroTextEditBottomSheet
+import com.pomodoro.timer.presentation.pomodoro.PomodoroTextEditSheet
 import com.pomodoro.timer.presentation.pomodoro.PomodoroTimer
 import com.pomodoro.timer.ui.theme.CustomTheme
 import com.pomodoro.timer.ui.theme.MyTheme
@@ -71,9 +66,7 @@ fun MainScreen(
     val colors by viewModel.colors.collectAsStateWithLifecycle()
     val mode = viewModel.mode
     val config = LocalConfiguration.current
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val isTablet = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
-    val editable = isTablet || config.orientation == Configuration.ORIENTATION_PORTRAIT //탭은 다 가능, 폰은 세로모드에서만 가능
+    val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -84,7 +77,6 @@ fun MainScreen(
                 editMode = editMode,
                 onEditModeChange = { editMode = it },
                 mode = mode,
-                editable = editable,
                 currentWidget = currentWidget,
                 editingWidget = editingWidget,
                 editWidget = viewModel::editWidget,
@@ -93,12 +85,20 @@ fun MainScreen(
                 onAddNewWidget = viewModel::onAddNewWidget,
                 onNextWidget = viewModel::onNextWidget,
                 onAddNewColor = viewModel::saveColor,
+                onUpdateColor = viewModel::updateColor,
                 onDeleteColor = viewModel::deleteColor,
                 colors = colors,
-                isTablet = isTablet,
+                isLandscape = isLandscape,
             )
         } else {
-            // 로딩중 UI
+           Box(
+               modifier = Modifier.fillMaxSize()
+           ){
+               CircularProgressIndicator(
+                   modifier = Modifier.align(Alignment.Center).size(100.dp),
+                   color = CustomTheme.colors.icon
+               )
+           }
         }
     }
 }
@@ -109,7 +109,6 @@ fun MainScreenContent(
     editMode: Boolean,
     onEditModeChange: (Boolean) -> Unit,
     mode: Mode,
-    editable: Boolean,
     currentWidget: CustomWidget,
     editingWidget: CustomWidget,
     editWidget: (CustomWidget) -> Unit,
@@ -118,21 +117,23 @@ fun MainScreenContent(
     onAddNewWidget: () -> Unit = {},
     onNextWidget: (Int) -> Unit,
     onAddNewColor: (Color) -> Unit = {},
+    onUpdateColor: (oldColor: Color, newColor: Color) -> Unit,
     onDeleteColor: (Color) -> Unit = {},
     colors: List<Color> = emptyList(),
-    isTablet: Boolean,
+    isLandscape: Boolean,
 ) {
-    val context = LocalContext.current
     val pagerState = rememberPagerState(
         initialPage = 0,
         pageCount = { widgets.size }
     )
     var showTextEditBottomSheet by remember { mutableStateOf(false) }
     var showContainerEditBottomSheet by remember { mutableStateOf(false) }
-    val controller = rememberColorPickerController()
     var showColorPicker by remember { mutableStateOf(false) }
     var colorPickerOption by remember { mutableIntStateOf(0) }
     var showButtons by remember { mutableStateOf(true) }
+    var currentColor by remember { mutableStateOf(colors.first()) }
+    var isAddColor by remember { mutableStateOf(true) }
+    val pagerEnabled = !showTextEditBottomSheet && !showContainerEditBottomSheet
     LaunchedEffect(widgets.size) {
         if(widgets.isNotEmpty() && editMode) pagerState.animateScrollToPage(widgets.lastIndex)
     }
@@ -151,7 +152,7 @@ fun MainScreenContent(
                 onCancelEdit = onCancelEdit
             )
         }
-        if(isTablet){
+        if(isLandscape){
             Row(
                 modifier = Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -168,20 +169,15 @@ fun MainScreenContent(
                                 enabled = !editMode,
                                 onDoubleClick = { showButtons = !showButtons },
                                 onLongClick = {
-                                    if (editable) {
-                                        onEditModeChange(true)
-                                    } else {
-                                        Toast.makeText(context, "가로 모드에서는 편집할 수 없습니다.", Toast.LENGTH_SHORT)
-                                            .show()
-                                    }
+                                    onEditModeChange(true)
                                 },
                                 onClick = {},
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
                             ),
                         state = pagerState,
-                        userScrollEnabled = editMode
-                    ) { page ->
+                        userScrollEnabled = editMode && pagerEnabled
+                    ) {
                         LaunchedEffect(pagerState) {
                             snapshotFlow { pagerState.currentPage }
                                 .collect { page ->
@@ -194,14 +190,13 @@ fun MainScreenContent(
                             editMode = editMode,
                             onEditText = {
                                 showTextEditBottomSheet = true
+                                showContainerEditBottomSheet = false
                             },
                             onEditContainer = {
                                 showContainerEditBottomSheet = true
+                                showTextEditBottomSheet = false
                             },
                             showButtons = showButtons,
-                            pagerState = pagerState,
-                            onAddNewWidget = onAddNewWidget,
-                            widgetsSize = widgets.size
                         )
                     }
                 }
@@ -212,12 +207,13 @@ fun MainScreenContent(
                     )
                 }
                 if(showContainerEditBottomSheet){
-                    TabletContainerEditBox(
+                    ContainerEditSheet(
                         modifier = Modifier.weight(1f),
-                        onClose = {
+                        onDismissRequest = {
                             showContainerEditBottomSheet = false
                         },
                         onColorClick = { color ->
+                            currentColor = color
                             editWidget(
                                 editingWidget.copy(
                                     fgColor = color
@@ -225,6 +221,7 @@ fun MainScreenContent(
                             )
                         },
                         onBackgroundColorClick = { color ->
+                            currentColor = color
                             editWidget(
                                 editingWidget.copy(
                                     bgColor = color,
@@ -241,42 +238,63 @@ fun MainScreenContent(
                             )
                         },
                         onColorPickerClick = { index ->
+                            isAddColor = false
                             showColorPicker = true
                             showContainerEditBottomSheet = false
                             colorPickerOption = index
                         },
-                        onHandColorClick = {
+                        onAddBtnClick = { index ->
+                            isAddColor = true
+                            showColorPicker = true
+                            showContainerEditBottomSheet = false
+                            colorPickerOption = index
+                        },
+                        onHandColorClick = { color ->
+                            currentColor = color
                             editWidget(
                                 editingWidget.copy(
-                                    handColor = it
+                                    handColor = color
                                 )
                             )
                         },
-                        onEdgeColorClick = {
+                        onEdgeColorClick = { color ->
+                            currentColor = color
                             editWidget(
                                 editingWidget.copy(
-                                    edgeColor = it
+                                    edgeColor = color
                                 )
                             )
                         },
-                        colors = colors
+                        colors = colors,
+                        currentColor = currentColor,
+                        isLandScape = true,
+                        onDeleteColor = onDeleteColor
                     )
                 }
                 if(showTextEditBottomSheet){
                     when(mode){
                         Mode.POMODORO -> {
-                            PomodoroTextEditBottomSheet(
+                            PomodoroTextEditSheet(
+                                modifier = Modifier.weight(1f),
                                 onDismissRequest = {
                                     showTextEditBottomSheet = false
                                 },
-                                onColorClick = {
+                                onColorClick = { color ->
+                                    currentColor = color
                                     editWidget(
                                         editingWidget.copy(
-                                            fontColor = it
+                                            fontColor = color
                                         )
                                     )
                                 },
                                 onColorPickerClick = { index ->
+                                    isAddColor = false
+                                    showColorPicker = true
+                                    showTextEditBottomSheet = false
+                                    colorPickerOption = index
+                                },
+                                onAddBtnClick = { index ->
+                                    isAddColor = true
                                     showColorPicker = true
                                     showTextEditBottomSheet = false
                                     colorPickerOption = index
@@ -336,100 +354,133 @@ fun MainScreenContent(
                                         )
                                     )
                                 },
-                                colors = colors
+                                colors = colors,
+                                currentColor = currentColor,
+                                isLandscape = true,
+                                onDeleteColor = onDeleteColor,
+                                fontSize = editingWidget.textStyle.fontSize.value,
+                                onFontSizeChange = { size ->
+                                    editWidget(
+                                        editingWidget.copy(
+                                            textStyle = editingWidget.textStyle.copy(
+                                                fontSize = size.sp
+                                            )
+                                        )
+                                    )
+                                },
                             )
                         }
                         else -> {}
                     }
                 }
                 if(showColorPicker){
-                    Box(
+                    ColorPicker(
                         modifier = Modifier.weight(1f).padding(20.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            modifier = Modifier.align(Alignment.TopEnd).clickable(
-                                onClick = {
-                                    showColorPicker = false
-                                    if( colorPickerOption == 4){
-                                        showTextEditBottomSheet = true
-                                    } else {
-                                        showContainerEditBottomSheet = true
-                                    }
+                        onClose = {
+                            showColorPicker = false
+                            when(colorPickerOption){
+                                0 -> {
+                                    editWidget(
+                                        editingWidget.copy(
+                                            fgColor = currentWidget.fgColor
+                                        )
+                                    )
                                 }
-                            ),
-                            imageVector = ImageVector.vectorResource(R.drawable.close),
-                            contentDescription = null,
-                            tint = CustomTheme.colors.icon
-                        )
-                        Column(
+                                1 -> {
+                                    editWidget(
+                                        editingWidget.copy(
+                                            bgColor = currentWidget.bgColor,
+                                        )
+                                    )
+                                }
+                                2 -> {
+                                    editWidget(
+                                        editingWidget.copy(
+                                            handColor = currentWidget.handColor
+                                        )
+                                    )
+                                }
+                                3 -> {
+                                    editWidget(
+                                        editingWidget.copy(
+                                            edgeColor = currentWidget.edgeColor
+                                        )
+                                    )
+                                }
+                                4 -> {
+                                    editWidget(
+                                        editingWidget.copy(
+                                            fontColor = currentWidget.fontColor
+                                        )
+                                    )
+                                }
+                            }
+                            if( colorPickerOption == 4){
+                                showTextEditBottomSheet = true
+                            } else {
+                                showContainerEditBottomSheet = true
+                            }
+                        },
+                        onConfirm = { color ->
+                            onAddNewColor(color)
+                            currentColor = color
+                            showColorPicker = false
+                            if( colorPickerOption == 4){
+                                showTextEditBottomSheet = true
+                            } else {
+                                showContainerEditBottomSheet = true
+                            }
+                        },
+                        colorPickerOption = colorPickerOption,
+                        editingWidget = editingWidget,
+                        editWidget = editWidget,
+                    )
+                }
+            }
+            if (editMode && pagerEnabled) {
+                Row(
+                    modifier = Modifier
+                        .padding(bottom = 10.dp).align(Alignment.BottomCenter),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    repeat(widgets.size) { index ->
+                        val isFocused = pagerState.currentPage == index
+                        Box(
                             modifier = Modifier
-                                .wrapContentSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            HsvColorPicker(
-                                modifier = Modifier
-                                    .size(200.dp)
-                                    .padding(10.dp),
-                                controller = controller,
-                                onColorChanged = { colorEnvelope: ColorEnvelope ->
-                                    when (colorPickerOption) {
-                                        0 -> {
-                                            editWidget(
-                                                editingWidget.copy(
-                                                    fgColor = Color(colorEnvelope.hexCode.toLong(16))
-                                                )
-                                            )
-                                        }
-                                        1 -> {
-                                            editWidget(
-                                                editingWidget.copy(
-                                                    bgColor = Color(colorEnvelope.hexCode.toLong(16)),
-                                                    backgroundImage = null
-                                                )
-                                            )
-                                        }
-                                        2 -> {
-                                            editWidget(
-                                                editingWidget.copy(
-                                                    handColor = Color(colorEnvelope.hexCode.toLong(16))
-                                                )
-                                            )
-                                        }
-                                        3 -> {
-                                            editWidget(
-                                                editingWidget.copy(
-                                                    edgeColor = Color(colorEnvelope.hexCode.toLong(16))
-                                                )
-                                            )
-                                        }
-                                        4 -> {
-                                            editWidget(
-                                                editingWidget.copy(
-                                                    fontColor = Color(colorEnvelope.hexCode.toLong(16))
-                                                )
-                                            )
-                                        }
-                                    }
-                                }
-                            )
-                            AlphaSlider(
-                                modifier = Modifier
-                                    .fillMaxWidth(0.8f)
-                                    .padding(10.dp)
-                                    .height(35.dp),
-                                controller = controller,
-                            )
-                            BrightnessSlider(
-                                modifier = Modifier
-                                    .fillMaxWidth(0.8f)
-                                    .padding(10.dp)
-                                    .height(35.dp),
-                                controller = controller,
-                            )
-                        }
+                                .padding(horizontal = 4.dp)
+                                .size(if (isFocused) 10.dp else 8.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (isFocused) CustomTheme.colors.dotIndicatorFocused
+                                    else CustomTheme.colors.dotIndicatorUnfocused
+                                )
+                        )
                     }
+                }
+                Box(
+                    modifier = Modifier
+                        .padding(40.dp)
+                        .border(
+                            width = 1.dp,
+                            color = CustomTheme.colors.buttonBorder,
+                            shape = CircleShape
+                        ).align(Alignment.BottomEnd)
+                        .clickable(
+                            onClick = {
+                                onAddNewWidget()
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ){
+                    Icon(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .padding(8.dp),
+                        imageVector = ImageVector.vectorResource(R.drawable.plus),
+                        contentDescription = null,
+                        tint = CustomTheme.colors.icon
+                    )
                 }
             }
         } else {
@@ -438,22 +489,15 @@ fun MainScreenContent(
                     .combinedClickable(
                         enabled = !editMode,
                         onDoubleClick = { showButtons = !showButtons },
-                        onLongClick = {
-                            if (editable) {
-                                onEditModeChange(true)
-                            } else {
-                                Toast.makeText(context, "가로 모드에서는 편집할 수 없습니다.", Toast.LENGTH_SHORT)
-                                    .show()
-                            }
-                        },
+                        onLongClick = { onEditModeChange(true) },
                         onClick = {},
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() }
                     )
                     .align(Alignment.Center),
                 state = pagerState,
-                userScrollEnabled = editMode
-            ) { page ->
+                userScrollEnabled = editMode && pagerEnabled
+            ) {
                 LaunchedEffect(pagerState) {
                     snapshotFlow { pagerState.currentPage }
                         .collect { page ->
@@ -471,17 +515,62 @@ fun MainScreenContent(
                         showContainerEditBottomSheet = true
                     },
                     showButtons = showButtons,
-                    pagerState = pagerState,
-                    onAddNewWidget = onAddNewWidget,
-                    widgetsSize = widgets.size
                 )
             }
+            if (editMode && pagerEnabled) {
+                Row(
+                    modifier = Modifier
+                        .padding(bottom = 40.dp).align(Alignment.BottomCenter),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    repeat(widgets.size) { index ->
+                        val isFocused = pagerState.currentPage == index
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp)
+                                .size(if (isFocused) 10.dp else 8.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (isFocused) CustomTheme.colors.dotIndicatorFocused
+                                    else CustomTheme.colors.dotIndicatorUnfocused
+                                )
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .padding(40.dp)
+                        .border(
+                            width = 1.dp,
+                            color = CustomTheme.colors.buttonBorder,
+                            shape = CircleShape
+                        ).align(Alignment.BottomEnd)
+                        .clickable(
+                            onClick = {
+                                onAddNewWidget()
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ){
+                    Icon(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .padding(8.dp),
+                        imageVector = ImageVector.vectorResource(R.drawable.plus),
+                        contentDescription = null,
+                        tint = CustomTheme.colors.icon
+                    )
+                }
+            }
             if(showContainerEditBottomSheet){
-                ContainerEditBottomSheet(
+                ContainerEditSheet(
+                    modifier = Modifier,
                     onDismissRequest = {
                         showContainerEditBottomSheet = false
                     },
                     onColorClick = { color ->
+                        currentColor = color
                         editWidget(
                             editingWidget.copy(
                                 fgColor = color
@@ -489,6 +578,7 @@ fun MainScreenContent(
                         )
                     },
                     onBackgroundColorClick = { color ->
+                        currentColor = color
                         editWidget(
                             editingWidget.copy(
                                 bgColor = color,
@@ -505,42 +595,63 @@ fun MainScreenContent(
                         )
                     },
                     onColorPickerClick = { index ->
+                        isAddColor = false
                         showColorPicker = true
                         showContainerEditBottomSheet = false
                         colorPickerOption = index
                     },
-                    onHandColorClick = {
+                    onAddBtnClick = { index ->
+                        isAddColor = true
+                        showColorPicker = true
+                        showContainerEditBottomSheet = false
+                        colorPickerOption = index
+                    },
+                    onHandColorClick = { color ->
+                        currentColor = color
                         editWidget(
                             editingWidget.copy(
-                                handColor = it
+                                handColor = color
                             )
                         )
                     },
-                    onEdgeColorClick = {
+                    onEdgeColorClick = { color ->
+                        currentColor = color
                         editWidget(
                             editingWidget.copy(
-                                edgeColor = it
+                                edgeColor = color
                             )
                         )
                     },
-                    colors = colors
+                    colors = colors,
+                    currentColor = currentColor,
+                    isLandScape = false,
+                    onDeleteColor = onDeleteColor
                 )
             }
             if(showTextEditBottomSheet){
                 when(mode){
                     Mode.POMODORO -> {
-                        PomodoroTextEditBottomSheet(
+                        PomodoroTextEditSheet(
+                            modifier = Modifier,
                             onDismissRequest = {
                                 showTextEditBottomSheet = false
                             },
-                            onColorClick = {
+                            onColorClick = { color ->
+                                currentColor = color
                                 editWidget(
                                     editingWidget.copy(
-                                        fontColor = it
+                                        fontColor = color
                                     )
                                 )
                             },
                             onColorPickerClick = { index ->
+                                isAddColor = false
+                                showColorPicker = true
+                                showTextEditBottomSheet = false
+                                colorPickerOption = index
+                            },
+                            onAddBtnClick = { index ->
+                                isAddColor = true
                                 showColorPicker = true
                                 showTextEditBottomSheet = false
                                 colorPickerOption = index
@@ -599,101 +710,94 @@ fun MainScreenContent(
                                         breakTimeSound = it
                                     )
                                 )
-                            }
+                            },
+                            colors = colors,
+                            currentColor = currentColor,
+                            isLandscape = false,
+                            onDeleteColor = onDeleteColor,
+                            fontSize = editingWidget.textStyle.fontSize.value,
+                            onFontSizeChange = { size ->
+                                editWidget(
+                                    editingWidget.copy(
+                                        textStyle = editingWidget.textStyle.copy(
+                                            fontSize = size.sp
+                                        )
+                                    )
+                                )
+                            },
                         )
                     }
                     else -> {}
                 }
             }
             if(showColorPicker){
-                Box(
+                ColorPicker(
                     modifier = Modifier.align(Alignment.BottomCenter).padding(
                         bottom = 120.dp
-                    )
-                ) {
-                    Icon(
-                        modifier = Modifier.align(Alignment.TopEnd).clickable(
-                            onClick = {
-                                showColorPicker = false
-                                if( colorPickerOption == 4){
-                                    showTextEditBottomSheet = true
-                                } else {
-                                    showContainerEditBottomSheet = true
-                                }
+                    ),
+                    onClose = {
+                        showColorPicker = false
+                        when(colorPickerOption){
+                            0 -> {
+                                editWidget(
+                                    editingWidget.copy(
+                                        fgColor = currentWidget.fgColor
+                                    )
+                                )
                             }
-                        ),
-                        imageVector = ImageVector.vectorResource(R.drawable.close),
-                        contentDescription = null,
-                        tint = CustomTheme.colors.icon
-                    )
-                    Column(
-                        modifier = Modifier
-                            .wrapContentSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        HsvColorPicker(
-                            modifier = Modifier
-                                .size(200.dp)
-                                .padding(10.dp),
-                            controller = controller,
-                            onColorChanged = { colorEnvelope: ColorEnvelope ->
-                                when (colorPickerOption) {
-                                    0 -> {
-                                        editWidget(
-                                            editingWidget.copy(
-                                                fgColor = Color(colorEnvelope.hexCode.toLong(16))
-                                            )
-                                        )
-                                    }
-                                    1 -> {
-                                        editWidget(
-                                            editingWidget.copy(
-                                                bgColor = Color(colorEnvelope.hexCode.toLong(16)),
-                                                backgroundImage = null
-                                            )
-                                        )
-                                    }
-                                    2 -> {
-                                        editWidget(
-                                            editingWidget.copy(
-                                                handColor = Color(colorEnvelope.hexCode.toLong(16))
-                                            )
-                                        )
-                                    }
-                                    3 -> {
-                                        editWidget(
-                                            editingWidget.copy(
-                                                edgeColor = Color(colorEnvelope.hexCode.toLong(16))
-                                            )
-                                        )
-                                    }
-                                    4 -> {
-                                        editWidget(
-                                            editingWidget.copy(
-                                                fontColor = Color(colorEnvelope.hexCode.toLong(16))
-                                            )
-                                        )
-                                    }
-                                }
+                            1 -> {
+                                editWidget(
+                                    editingWidget.copy(
+                                        bgColor = currentWidget.bgColor,
+                                    )
+                                )
                             }
-                        )
-                        AlphaSlider(
-                            modifier = Modifier
-                                .fillMaxWidth(0.8f)
-                                .padding(10.dp)
-                                .height(35.dp),
-                            controller = controller,
-                        )
-                        BrightnessSlider(
-                            modifier = Modifier
-                                .fillMaxWidth(0.8f)
-                                .padding(10.dp)
-                                .height(35.dp),
-                            controller = controller,
-                        )
-                    }
-                }
+                            2 -> {
+                                editWidget(
+                                    editingWidget.copy(
+                                        handColor = currentWidget.handColor
+                                    )
+                                )
+                            }
+                            3 -> {
+                                editWidget(
+                                    editingWidget.copy(
+                                        edgeColor = currentWidget.edgeColor
+                                    )
+                                )
+                            }
+                            4 -> {
+                                editWidget(
+                                    editingWidget.copy(
+                                        fontColor = currentWidget.fontColor
+                                    )
+                                )
+                            }
+                        }
+                        if( colorPickerOption == 4){
+                            showTextEditBottomSheet = true
+                        } else {
+                            showContainerEditBottomSheet = true
+                        }
+                    },
+                    onConfirm = { color ->
+                        if(isAddColor){
+                            onAddNewColor(color)
+                        } else {
+                            onUpdateColor(currentColor, color)
+                        }
+                        currentColor = color
+                        showColorPicker = false
+                        if( colorPickerOption == 4){
+                            showTextEditBottomSheet = true
+                        } else {
+                            showContainerEditBottomSheet = true
+                        }
+                    },
+                    colorPickerOption = colorPickerOption,
+                    editingWidget = editingWidget,
+                    editWidget = editWidget
+                )
             }
         }
     }
@@ -712,14 +816,14 @@ fun MainScreenContentTabletPreview(){
             editMode = false,
             onEditModeChange = {},
             mode = Mode.POMODORO,
-            editable = true,
             currentWidget = CustomWidget(),
             editingWidget = CustomWidget(),
             editWidget = {},
             onCancelEdit = {},
             onDoneEdit = {},
             onNextWidget = {},
-            isTablet = true
+            onUpdateColor = { _, _ -> },
+            isLandscape = true
         )
     }
 }
