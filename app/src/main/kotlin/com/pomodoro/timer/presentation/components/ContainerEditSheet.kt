@@ -115,45 +115,43 @@ fun ContainerEditSheet(
             }
         )
     if(isLandScape){
-        Box(
+        Column(
             modifier = modifier.fillMaxHeight().padding(30.dp).background(
                 color = CustomTheme.colors.surface
-            )
-        ){
+            ),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
             IconButton(
-                modifier = Modifier.align(Alignment.TopEnd),
+                modifier = Modifier.align(Alignment.End),
                 onClick = onDismissRequest
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.close),
                     contentDescription = null,
+                    tint = CustomTheme.colors.icon
                 )
             }
-            Column(
-                modifier = Modifier.fillMaxHeight(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                ContainerEditSheetContent(
-                    pagerState = pagerState,
-                    colors = colors,
-                    currentColor = currentColor,
-                    onColorClick = onColorClick,
-                    onBackgroundColorClick = onBackgroundColorClick,
-                    onHandColorClick = onHandColorClick,
-                    onEdgeColorClick = onEdgeColorClick,
-                    onAddBtnClick = onAddBtnClick,
-                    onColorPickerClick = onColorPickerClick,
-                    onImagePickerClick = {
-                        if (galleryPermissions.all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
-                            albumLauncher.launch(imageAlbumIntent)
-                        } else {
-                            requestPermissionLauncher.launch(galleryPermissions)
-                        }
-                    },
-                    onDeleteColor = onDeleteColor,
-                )
-            }
+            ContainerEditSheetContent(
+                modifier = Modifier.weight(1f),
+                pagerState = pagerState,
+                colors = colors,
+                currentColor = currentColor,
+                onColorClick = onColorClick,
+                onBackgroundColorClick = onBackgroundColorClick,
+                onHandColorClick = onHandColorClick,
+                onEdgeColorClick = onEdgeColorClick,
+                onAddBtnClick = onAddBtnClick,
+                onColorPickerClick = onColorPickerClick,
+                onImagePickerClick = {
+                    if (galleryPermissions.all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
+                        albumLauncher.launch(imageAlbumIntent)
+                    } else {
+                        requestPermissionLauncher.launch(galleryPermissions)
+                    }
+                },
+                onDeleteColor = onDeleteColor,
+            )
         }
     } else {
         ModalBottomSheet(
@@ -187,6 +185,7 @@ fun ContainerEditSheet(
 
 @Composable
 fun ContainerEditSheetContent(
+    modifier: Modifier = Modifier,
     pagerState: PagerState,
     colors: List<Color>,
     currentColor: Color,
@@ -205,6 +204,7 @@ fun ContainerEditSheetContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         HorizontalPager(
+            modifier = modifier,
             state = pagerState
         ){ page ->
             when(page){
