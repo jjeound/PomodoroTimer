@@ -6,7 +6,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pomodoro.timer.data.model.CustomWidget
@@ -18,7 +17,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.Long
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -45,6 +43,8 @@ class MainViewModel @Inject constructor(
     val colors = _colors.asStateFlow()
 
     var mode by mutableStateOf(Mode.POMODORO)
+        private set
+    var showButtons by mutableStateOf(true)
         private set
 
     init {
@@ -124,10 +124,10 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun deleteWidget(id: Long){
+    fun deleteWidget(){
         viewModelScope.launch {
             repository.deleteWidget(
-                id = id,
+                id = _editingWidget.value.id,
                 onStart = { uiState.value = MainUiState.Loading },
                 onComplete = { getWidgets() },
                 onError = { message -> uiState.value = MainUiState.Error("다시 삭제해주세요")
@@ -193,6 +193,10 @@ class MainViewModel @Inject constructor(
                     Log.d("MainViewModel", "deleteColor: $message") }
             ).collect()
         }
+    }
+
+    fun onShowButtonsChange(){
+        showButtons = !showButtons
     }
 }
 
