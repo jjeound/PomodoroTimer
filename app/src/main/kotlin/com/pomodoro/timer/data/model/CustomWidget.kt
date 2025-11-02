@@ -2,13 +2,17 @@ package com.pomodoro.timer.data.model
 
 import android.net.Uri
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import com.pomodoro.timer.R
-import com.pomodoro.timer.ui.theme.customTypography
+import com.pomodoro.timer.ui.theme.Black
+import com.pomodoro.timer.ui.theme.Red
+import com.pomodoro.timer.ui.theme.White
+import com.pomodoro.timer.ui.theme.pretendard
 
 data class CustomWidget(
     val id: Long = 0L,
-    val textStyle: TextStyle = customTypography.buttonTimerSmall,
+    val fontFamily: FontFamily = pretendard,
+    val fontSize: Float = 30f,
     val backgroundImage: Uri? = null,
     val mode: Mode = Mode.POMODORO, // 0: 시계 형, 1: 디지털 형, 2: 탁상 형
     val hour: Int = 1,
@@ -20,11 +24,11 @@ data class CustomWidget(
     val breakTimeSound: Int = R.raw.buzzer,
     val soundMode: SoundMode = SoundMode.NO_SOUND,
     val repeat: Int = 1,
-    val fontColor: Color = Color(0xFF000000),
-    val fgColor: Color = Color(0xFFF8384C),
-    val bgColor: Color = Color(0x00000000),
-    val handColor: Color = Color(0xFF000000),
-    val edgeColor: Color = Color(0xFF000000),
+    val fontColor: Color = Black,
+    val fgColor: Color = Red,
+    val bgColor: Color = White,
+    val handColor: Color = Black,
+    val edgeColor: Color = Black,
     val bgMode: BgMode = BgMode.IDLE
 )
 
