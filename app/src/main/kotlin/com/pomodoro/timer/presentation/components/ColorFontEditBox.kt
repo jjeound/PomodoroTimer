@@ -1,6 +1,5 @@
 package com.pomodoro.timer.presentation.components
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,7 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pomodoro.timer.R
@@ -31,14 +30,13 @@ fun ColorFontEditBox(
     onColorClick: (Color) -> Unit,
     onColorPickerClick: (index: Int) -> Unit,
     onAddBtnClick: (index: Int) -> Unit,
-    onFontClick: (TextStyle) -> Unit,
+    onFontClick: (FontFamily) -> Unit,
     currentColor: Color,
     onDeleteColor: (Color) -> Unit,
     colors: List<Color>,
     fontSize: Float,
     onFontSizeChange: (Float) -> Unit
 ) {
-    Log.d("fontsize", fontSize.toString())
     val textStyles = listOf(
         customTypography.textPreview1,
         customTypography.textPreview2,
@@ -46,7 +44,7 @@ fun ColorFontEditBox(
         customTypography.textPreview4,
     )
     Column(
-        modifier = Modifier.wrapContentHeight().fillMaxWidth().padding(vertical = 10.dp),
+        modifier = Modifier.wrapContentHeight().fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(15.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -85,7 +83,7 @@ fun ColorFontEditBox(
                     val textStyle = textStyles[index]
                     Text(
                         modifier = Modifier.clickable(
-                            onClick = { onFontClick(textStyle) }
+                            onClick = { onFontClick(textStyle.fontFamily!!) }
                         ),
                         text = "10",
                         style = textStyle,
@@ -102,9 +100,11 @@ fun ColorFontEditBox(
                 colors = SliderDefaults.colors(
                     thumbColor = CustomTheme.colors.icon,
                     activeTrackColor = CustomTheme.colors.icon,
-                    inactiveTrackColor = CustomTheme.colors.icon,
+                    activeTickColor = CustomTheme.colors.icon,
+                    inactiveTickColor = CustomTheme.colors.surface,
+                    inactiveTrackColor = CustomTheme.colors.surface,
                 ),
-                valueRange = 20f..35f
+                valueRange = 20f..40f
             )
         }
     }
