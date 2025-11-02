@@ -25,7 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pomodoro.timer.R
@@ -44,7 +44,7 @@ fun PomodoroTextEditSheet(
     onColorClick: (Color) -> Unit,
     onColorPickerClick: (index: Int) -> Unit,
     onAddBtnClick: (index: Int) -> Unit,
-    onFontClick: (TextStyle) -> Unit,
+    onFontClick: (FontFamily) -> Unit,
     gap: Int,
     onClickGap: (Int) -> Unit,
     breakTime: Int,
@@ -69,13 +69,15 @@ fun PomodoroTextEditSheet(
     )
     val pagerState = rememberPagerState(pageCount = {3})
     if(isLandscape) {
-        Box(
-            modifier = modifier.fillMaxHeight().padding(30.dp).background(
+        Column(
+            modifier = modifier.fillMaxHeight().padding(20.dp).background(
                 color = CustomTheme.colors.surface
-            )
-        ){
+            ),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
             IconButton(
-                modifier = Modifier.align(Alignment.TopEnd),
+                modifier = Modifier.align(Alignment.End),
                 onClick = onDismissRequest
             ) {
                 Icon(
@@ -83,81 +85,72 @@ fun PomodoroTextEditSheet(
                     contentDescription = null,
                 )
             }
-            Column(
-                modifier = Modifier.fillMaxHeight(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
+            HorizontalPager(
+                modifier = Modifier.weight(1f),
+                state = pagerState
+            ){ page ->
+                when(page){
+                    0 -> {
+                        ColorFontEditBox(
+                            onColorClick = {
+                                onColorClick(it)
+                            },
+                            onColorPickerClick = onColorPickerClick,
+                            onAddBtnClick = onAddBtnClick,
+                            onFontClick = onFontClick,
+                            currentColor = currentColor,
+                            colors = colors,
+                            onDeleteColor = onDeleteColor,
+                            fontSize = fontSize,
+                            onFontSizeChange = onFontSizeChange
+                        )
+                    }
+                    1 -> {
+                        TimerEditBox(
+                            gap = gap,
+                            onClickGap = onClickGap,
+                            breakTime = breakTime,
+                            onChangeBreakTime = onChangeBreakTime,
+                            repeat = repeat,
+                            onChangeRepeat = onChangeRepeat,
+                            hour = 0,
+                            minute = 0,
+                            second = 0,
+                            onChangeHour = {},
+                            onChangeMinute = {},
+                            onChangeSecond = {},
+                            mode = 0
+                        )
+                    }
+                    2 -> {
+                        SoundEditBox(
+                            soundMode = soundMode,
+                            onClickSoundMode = onClickSoundMode,
+                            startSound = startSound,
+                            restartSound = restartSound,
+                            onChangeStartSound = onClickStartSound,
+                            onChangeBreakTimeSound = onChangeBreakTimeSound,
+                        )
+                    }
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 15.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(
-                    modifier = Modifier.wrapContentHeight().fillMaxWidth(),
-                ) {
-                    HorizontalPager(
-                        state = pagerState
-                    ){ page ->
-                        when(page){
-                            0 -> {
-                                ColorFontEditBox(
-                                    onColorClick = {
-                                        onColorClick(it)
-                                    },
-                                    onColorPickerClick = onColorPickerClick,
-                                    onAddBtnClick = onAddBtnClick,
-                                    onFontClick = onFontClick,
-                                    currentColor = currentColor,
-                                    colors = colors,
-                                    onDeleteColor = onDeleteColor,
-                                    fontSize = fontSize,
-                                    onFontSizeChange = onFontSizeChange
-                                )
-                            }
-                            1 -> {
-                                TimerEditBox(
-                                    gap = gap,
-                                    onClickGap = onClickGap,
-                                    breakTime = breakTime,
-                                    onChangeBreakTime = onChangeBreakTime,
-                                    repeat = repeat,
-                                    onChangeRepeat = onChangeRepeat,
-                                    hour = 0,
-                                    minute = 0,
-                                    second = 0,
-                                    onChangeHour = {},
-                                    onChangeMinute = {},
-                                    onChangeSecond = {},
-                                    mode = 0
-                                )
-                            }
-                            2 -> {
-                                SoundEditBox(
-                                    soundMode = soundMode,
-                                    onClickSoundMode = onClickSoundMode,
-                                    startSound = startSound,
-                                    restartSound = restartSound,
-                                    onChangeStartSound = onClickStartSound,
-                                    onChangeBreakTimeSound = onChangeBreakTimeSound,
-                                )
-                            }
-                        }
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 15.dp, bottom = 30.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        repeat(3) { index ->
-                            val isFocused = pagerState.currentPage == index
-                            Box(
-                                modifier = Modifier
-                                    .padding(horizontal = 4.dp)
-                                    .size(if (isFocused) 10.dp else 8.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (isFocused) CustomTheme.colors.dotIndicatorFocused
-                                        else CustomTheme.colors.dotIndicatorUnfocused
-                                    )
+                repeat(3) { index ->
+                    val isFocused = pagerState.currentPage == index
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .size(if (isFocused) 10.dp else 8.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (isFocused) CustomTheme.colors.dotIndicatorFocused
+                                else CustomTheme.colors.dotIndicatorUnfocused
                             )
-                        }
-                    }
+                    )
                 }
             }
         }
