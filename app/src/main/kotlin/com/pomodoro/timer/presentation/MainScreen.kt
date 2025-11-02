@@ -65,6 +65,7 @@ fun MainScreen(
     val widgetsByMode by viewModel.widgetsByMode.collectAsStateWithLifecycle()
     val colors by viewModel.colors.collectAsStateWithLifecycle()
     val mode = viewModel.mode
+    val showButtons = viewModel.showButtons
     val config = LocalConfiguration.current
     val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
     Box(
@@ -89,6 +90,9 @@ fun MainScreen(
                 onDeleteColor = viewModel::deleteColor,
                 colors = colors,
                 isLandscape = isLandscape,
+                showButtons = showButtons,
+                onShowButtonsChange = viewModel::onShowButtonsChange,
+                onDeleteWidget = viewModel::deleteWidget
             )
         } else {
            Box(
@@ -121,6 +125,9 @@ fun MainScreenContent(
     onDeleteColor: (Color) -> Unit = {},
     colors: List<Color> = emptyList(),
     isLandscape: Boolean,
+    showButtons: Boolean,
+    onShowButtonsChange: () -> Unit,
+    onDeleteWidget: () -> Unit,
 ) {
     val pagerState = rememberPagerState(
         initialPage = 0,
@@ -130,17 +137,22 @@ fun MainScreenContent(
     var showContainerEditBottomSheet by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
     var colorPickerOption by remember { mutableIntStateOf(0) }
-    var showButtons by remember { mutableStateOf(true) }
     var currentColor by remember { mutableStateOf(colors.first()) }
     var isAddColor by remember { mutableStateOf(true) }
-    val pagerEnabled = !showTextEditBottomSheet && !showContainerEditBottomSheet
+    val pagerEnabled = !showTextEditBottomSheet && !showContainerEditBottomSheet && !showColorPicker
+    var showDelete by remember { mutableStateOf(false) }
     LaunchedEffect(widgets.size) {
         if(widgets.isNotEmpty() && editMode) pagerState.animateScrollToPage(widgets.lastIndex)
+    }
+    LaunchedEffect(showTextEditBottomSheet, showContainerEditBottomSheet, editMode) {
+        if (showTextEditBottomSheet || showContainerEditBottomSheet || !editMode) {
+            showDelete = false
+        }
     }
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
-        if (editMode && !showTextEditBottomSheet && !showContainerEditBottomSheet && !showColorPicker) {
+        if (editMode && pagerEnabled) {
             EditButtons(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -154,51 +166,47 @@ fun MainScreenContent(
         }
         if(isLandscape){
             Row(
-                modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxSize().align(Alignment.Center),
             ) {
-                Column(
-                    modifier = Modifier.fillMaxHeight().weight(1f),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                HorizontalPager(
+                    modifier = Modifier.weight(1f)
+                        .combinedClickable(
+                            enabled = !editMode,
+                            onDoubleClick = onShowButtonsChange,
+                            onLongClick = {
+                                onEditModeChange(true)
+                            },
+                            onClick = {},
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ),
+                    state = pagerState,
+                    userScrollEnabled = editMode && pagerEnabled
                 ) {
-                    HorizontalPager(
-                        modifier = Modifier
-                            .combinedClickable(
-                                enabled = !editMode,
-                                onDoubleClick = { showButtons = !showButtons },
-                                onLongClick = {
-                                    onEditModeChange(true)
-                                },
-                                onClick = {},
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
-                            ),
-                        state = pagerState,
-                        userScrollEnabled = editMode && pagerEnabled
-                    ) {
-                        LaunchedEffect(pagerState) {
-                            snapshotFlow { pagerState.currentPage }
-                                .collect { page ->
-                                    onNextWidget(page)
-                                }
-                        }
-                        PomodoroTimer(
-                            modifier = Modifier.fillMaxSize(),
-                            widget = if(editMode) editingWidget else currentWidget,
-                            editMode = editMode,
-                            onEditText = {
-                                showTextEditBottomSheet = true
-                                showContainerEditBottomSheet = false
-                            },
-                            onEditContainer = {
-                                showContainerEditBottomSheet = true
-                                showTextEditBottomSheet = false
-                            },
-                            showButtons = showButtons,
-                        )
+                    LaunchedEffect(pagerState) {
+                        snapshotFlow { pagerState.currentPage }
+                            .collect { page ->
+                                onNextWidget(page)
+                            }
                     }
+                    PomodoroTimer(
+                        modifier = Modifier.fillMaxSize(),
+                        widget = if(editMode) editingWidget else currentWidget,
+                        editMode = editMode,
+                        onEditText = {
+                            showTextEditBottomSheet = true
+                            showContainerEditBottomSheet = false
+                        },
+                        onEditContainer = {
+                            showContainerEditBottomSheet = true
+                            showTextEditBottomSheet = false
+                        },
+                        showButtons = showButtons,
+                        onDeleteWidget = onDeleteWidget,
+                        showDelete = showDelete,
+                        onShowDeleteChange = { showDelete = it },
+                        pagerEnabled = pagerEnabled
+                    )
                 }
                 if (showContainerEditBottomSheet || showTextEditBottomSheet || showColorPicker) {
                     VerticalDivider(
@@ -302,7 +310,7 @@ fun MainScreenContent(
                                 onFontClick = {
                                     editWidget(
                                         editingWidget.copy(
-                                            textStyle = it
+                                            fontFamily = it
                                         )
                                     )
                                 },
@@ -358,13 +366,11 @@ fun MainScreenContent(
                                 currentColor = currentColor,
                                 isLandscape = true,
                                 onDeleteColor = onDeleteColor,
-                                fontSize = editingWidget.textStyle.fontSize.value,
+                                fontSize = editingWidget.fontSize,
                                 onFontSizeChange = { size ->
                                     editWidget(
                                         editingWidget.copy(
-                                            textStyle = editingWidget.textStyle.copy(
-                                                fontSize = size.sp
-                                            )
+                                            fontSize = size
                                         )
                                     )
                                 },
@@ -437,58 +443,12 @@ fun MainScreenContent(
                     )
                 }
             }
-            if (editMode && pagerEnabled) {
-                Row(
-                    modifier = Modifier
-                        .padding(bottom = 10.dp).align(Alignment.BottomCenter),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    repeat(widgets.size) { index ->
-                        val isFocused = pagerState.currentPage == index
-                        Box(
-                            modifier = Modifier
-                                .padding(horizontal = 4.dp)
-                                .size(if (isFocused) 10.dp else 8.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (isFocused) CustomTheme.colors.dotIndicatorFocused
-                                    else CustomTheme.colors.dotIndicatorUnfocused
-                                )
-                        )
-                    }
-                }
-                Box(
-                    modifier = Modifier
-                        .padding(40.dp)
-                        .border(
-                            width = 1.dp,
-                            color = CustomTheme.colors.buttonBorder,
-                            shape = CircleShape
-                        ).align(Alignment.BottomEnd)
-                        .clickable(
-                            onClick = {
-                                onAddNewWidget()
-                            }
-                        ),
-                    contentAlignment = Alignment.Center
-                ){
-                    Icon(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .padding(8.dp),
-                        imageVector = ImageVector.vectorResource(R.drawable.plus),
-                        contentDescription = null,
-                        tint = CustomTheme.colors.icon
-                    )
-                }
-            }
         } else {
             HorizontalPager(
                 modifier = Modifier
                     .combinedClickable(
                         enabled = !editMode,
-                        onDoubleClick = { showButtons = !showButtons },
+                        onDoubleClick = onShowButtonsChange,
                         onLongClick = { onEditModeChange(true) },
                         onClick = {},
                         indication = null,
@@ -515,53 +475,11 @@ fun MainScreenContent(
                         showContainerEditBottomSheet = true
                     },
                     showButtons = showButtons,
+                    onDeleteWidget = onDeleteWidget,
+                    showDelete = showDelete,
+                    onShowDeleteChange = { showDelete = it },
+                    pagerEnabled = pagerEnabled
                 )
-            }
-            if (editMode && pagerEnabled) {
-                Row(
-                    modifier = Modifier
-                        .padding(bottom = 40.dp).align(Alignment.BottomCenter),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    repeat(widgets.size) { index ->
-                        val isFocused = pagerState.currentPage == index
-                        Box(
-                            modifier = Modifier
-                                .padding(horizontal = 4.dp)
-                                .size(if (isFocused) 10.dp else 8.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (isFocused) CustomTheme.colors.dotIndicatorFocused
-                                    else CustomTheme.colors.dotIndicatorUnfocused
-                                )
-                        )
-                    }
-                }
-                Box(
-                    modifier = Modifier
-                        .padding(40.dp)
-                        .border(
-                            width = 1.dp,
-                            color = CustomTheme.colors.buttonBorder,
-                            shape = CircleShape
-                        ).align(Alignment.BottomEnd)
-                        .clickable(
-                            onClick = {
-                                onAddNewWidget()
-                            }
-                        ),
-                    contentAlignment = Alignment.Center
-                ){
-                    Icon(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .padding(8.dp),
-                        imageVector = ImageVector.vectorResource(R.drawable.plus),
-                        contentDescription = null,
-                        tint = CustomTheme.colors.icon
-                    )
-                }
             }
             if(showContainerEditBottomSheet){
                 ContainerEditSheet(
@@ -659,7 +577,7 @@ fun MainScreenContent(
                             onFontClick = {
                                 editWidget(
                                     editingWidget.copy(
-                                        textStyle = it
+                                        fontFamily = it
                                     )
                                 )
                             },
@@ -715,13 +633,11 @@ fun MainScreenContent(
                             currentColor = currentColor,
                             isLandscape = false,
                             onDeleteColor = onDeleteColor,
-                            fontSize = editingWidget.textStyle.fontSize.value,
+                            fontSize = editingWidget.fontSize,
                             onFontSizeChange = { size ->
                                 editWidget(
                                     editingWidget.copy(
-                                        textStyle = editingWidget.textStyle.copy(
-                                            fontSize = size.sp
-                                        )
+                                        fontSize = size
                                     )
                                 )
                             },
@@ -800,6 +716,52 @@ fun MainScreenContent(
                 )
             }
         }
+        if (editMode && pagerEnabled) {
+            Row(
+                modifier = Modifier
+                    .padding(bottom = 20.dp).align(Alignment.BottomCenter),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(widgets.size) { index ->
+                    val isFocused = pagerState.currentPage == index
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .size(if (isFocused) 10.dp else 8.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (isFocused) CustomTheme.colors.dotIndicatorFocused
+                                else CustomTheme.colors.dotIndicatorUnfocused
+                            )
+                    )
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .padding(40.dp)
+                    .border(
+                        width = 1.dp,
+                        color = CustomTheme.colors.buttonBorder,
+                        shape = CircleShape
+                    ).align(Alignment.BottomEnd)
+                    .clickable(
+                        onClick = {
+                            onAddNewWidget()
+                        }
+                    ),
+                contentAlignment = Alignment.Center
+            ){
+                Icon(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .padding(8.dp),
+                    imageVector = ImageVector.vectorResource(R.drawable.plus),
+                    contentDescription = null,
+                    tint = CustomTheme.colors.icon
+                )
+            }
+        }
     }
 }
 
@@ -823,7 +785,10 @@ fun MainScreenContentTabletPreview(){
             onDoneEdit = {},
             onNextWidget = {},
             onUpdateColor = { _, _ -> },
-            isLandscape = true
+            isLandscape = true,
+            showButtons = true,
+            onShowButtonsChange = {},
+            onDeleteWidget = {}
         )
     }
 }
