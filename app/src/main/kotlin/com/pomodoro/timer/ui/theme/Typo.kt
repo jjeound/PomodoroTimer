@@ -31,7 +31,7 @@ data class CustomTypography(
     val textPreview4: TextStyle,
 )
 
-val fontFamily = FontFamily(
+val pretendard = FontFamily(
     Font(R.font.pretendard_black, FontWeight.Black),
     Font(R.font.pretendard_bold, FontWeight.Bold),
     Font(R.font.pretendard_extrabold, FontWeight.ExtraBold),
@@ -67,22 +67,22 @@ val bebasNeue = FontFamily(
 )
 
 val customTypography =  CustomTypography(
-    buttonTimerSmall = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Light, fontSize = 30.sp),
-    buttonTimerLarge = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Light, fontSize = 40.sp),
-    buttonEditSmall = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.SemiBold, fontSize = 14.sp),
-    buttonEditLarge = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.SemiBold, fontSize = 14.sp),
-    clockTimeSmall = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = 37.sp),
-    clockTimeLarge = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = 82.sp),
-    digitalTimeSmall = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = 60.sp),
-    digitalTimeLarge = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = 100.sp),
+    buttonTimerSmall = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.Light, fontSize = 30.sp),
+    buttonTimerLarge = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.Light, fontSize = 40.sp),
+    buttonEditSmall = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.SemiBold, fontSize = 14.sp),
+    buttonEditLarge = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.SemiBold, fontSize = 14.sp),
+    clockTimeSmall = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.Normal, fontSize = 37.sp),
+    clockTimeLarge = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.Normal, fontSize = 82.sp),
+    digitalTimeSmall = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.Normal, fontSize = 60.sp),
+    digitalTimeLarge = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.Normal, fontSize = 100.sp),
     deskTimeSmall = TextStyle(fontFamily = digitalMonoFont, fontSize = 76.sp),
     deskTimeLarge = TextStyle(fontFamily = digitalMonoFont, fontSize = 300.sp),
-    editTitleSmall = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Bold, fontSize = 18.sp),
-    editTitleLarge = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Bold, fontSize = 50.sp),
-    selectorSelected = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.SemiBold, fontSize = 13.sp),
-    selectorUnSelected = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = 13.sp),
-    textField = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.Normal, fontSize = 13.sp),
-    textPreview1 = TextStyle(fontFamily = fontFamily, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
+    editTitleSmall = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.Bold, fontSize = 18.sp),
+    editTitleLarge = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.Bold, fontSize = 50.sp),
+    selectorSelected = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.SemiBold, fontSize = 13.sp),
+    selectorUnSelected = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.Normal, fontSize = 13.sp),
+    textField = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.Normal, fontSize = 13.sp),
+    textPreview1 = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
     textPreview2 = TextStyle(fontFamily = comfortaa, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
     textPreview3 = TextStyle(fontFamily = freesentation, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
     textPreview4 = TextStyle(fontFamily = bebasNeue, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
