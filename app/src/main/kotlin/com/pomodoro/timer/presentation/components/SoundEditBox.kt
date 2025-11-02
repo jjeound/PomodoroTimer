@@ -56,7 +56,7 @@ fun SoundEditBox(
         Pair("sneeze", R.raw.sneeze ),
     )
     Column(
-        modifier = Modifier.wrapContentHeight().fillMaxWidth().padding(vertical = 10.dp),
+        modifier = Modifier.wrapContentHeight().fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(15.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ){
@@ -149,7 +149,7 @@ fun SoundEditBox(
                     color = CustomTheme.colors.selectorTextSelected,
                 )
                 DropdownMenu(
-                    modifier = Modifier.fillMaxWidth(0.8f).background(
+                    modifier = Modifier.background(
                         color = CustomTheme.colors.textFieldContainer,
                         shape = RoundedCornerShape(12.dp)
                     ),
@@ -161,13 +161,12 @@ fun SoundEditBox(
                 ) {
                     startSoundList.forEach{
                         DropdownMenuItem(
-                            modifier = Modifier.fillMaxWidth().height(32.dp).background(
+                            modifier = Modifier.height(32.dp).background(
                                 color = CustomTheme.colors.textFieldContainer,
                                 shape = RoundedCornerShape(12.dp)
                             ),
                             text = {
                                 Text(
-                                    modifier = Modifier.fillMaxWidth(),
                                     text = it.first,
                                     style = CustomTheme.typography.textField,
                                     color = CustomTheme.colors.selectorTextSelected,
@@ -220,7 +219,7 @@ fun SoundEditBox(
                     color = CustomTheme.colors.selectorTextSelected,
                 )
                 DropdownMenu(
-                    modifier = Modifier.fillMaxWidth(0.8f).background(
+                    modifier = Modifier.background(
                         color = CustomTheme.colors.textFieldContainer,
                         shape = RoundedCornerShape(12.dp)
                     ),
@@ -232,13 +231,12 @@ fun SoundEditBox(
                 ) {
                     restartSoundList.forEach {
                         DropdownMenuItem(
-                            modifier = Modifier.fillMaxWidth().height(32.dp).background(
+                            modifier = Modifier.height(32.dp).background(
                                 color = CustomTheme.colors.textFieldContainer,
                                 shape = RoundedCornerShape(12.dp)
                             ),
                             text = {
                                 Text(
-                                    modifier = Modifier.fillMaxWidth(),
                                     text = it.first,
                                     style = CustomTheme.typography.textField,
                                     color = CustomTheme.colors.selectorTextSelected,
