@@ -96,7 +96,8 @@ class MainRepositoryImpl @Inject constructor(
         val entity = widget.asEntity()
         dao.updateCustomWidget(
             widget.id,
-            entity.textStyle,
+            entity.fontFamily,
+            entity.fontSize,
             entity.fontColor,
             entity.backgroundImage,
             entity.mode,
