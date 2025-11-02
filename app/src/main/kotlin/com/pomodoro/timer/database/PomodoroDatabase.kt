@@ -9,13 +9,13 @@ import com.pomodoro.timer.database.typeConverter.BgModeTypeConverter
 import com.pomodoro.timer.database.typeConverter.ColorTypeConverter
 import com.pomodoro.timer.database.typeConverter.ModeTypeConverter
 import com.pomodoro.timer.database.typeConverter.SoundModeTypeConverter
-import com.pomodoro.timer.database.typeConverter.TextStyleTypeConverter
+import com.pomodoro.timer.database.typeConverter.FontFamilyTypeConverter
 
 
-@Database(entities = [CustomWidgetEntity::class, ColorEntity::class], version = 3, exportSchema = true)
+@Database(entities = [CustomWidgetEntity::class, ColorEntity::class], version = 4, exportSchema = true)
 @TypeConverters(value =
     [
-        TextStyleTypeConverter::class, ColorTypeConverter::class, ModeTypeConverter::class, SoundModeTypeConverter::class,
+        FontFamilyTypeConverter::class, ColorTypeConverter::class, ModeTypeConverter::class, SoundModeTypeConverter::class,
         BgModeTypeConverter::class
     ]
 )

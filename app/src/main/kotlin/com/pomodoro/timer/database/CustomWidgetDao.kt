@@ -2,6 +2,7 @@ package com.pomodoro.timer.database
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -28,7 +29,8 @@ interface CustomWidgetDao {
     @Query("""
         UPDATE custom_widget
         SET 
-            textStyle = CASE WHEN :textStyle IS NOT NULL THEN :textStyle ELSE textStyle END,
+            fontFamily = CASE WHEN :fontFamily IS NOT NULL THEN :fontFamily ELSE fontFamily END,
+            fontSize = CASE WHEN :fontSize IS NOT NULL THEN :fontSize ELSE fontSize END,
             fontColor = CASE WHEN :fontColor IS NOT NULL THEN :fontColor ELSE fontColor END,
             backgroundImage = CASE WHEN :backgroundImage IS NOT NULL THEN :backgroundImage ELSE backgroundImage END,
             mode = CASE WHEN :mode IS NOT NULL THEN :mode ELSE mode END,
@@ -50,7 +52,8 @@ interface CustomWidgetDao {
     """)
     suspend fun updateCustomWidget(
         id: Long,
-        textStyle: TextStyle?,
+        fontFamily: FontFamily?,
+        fontSize: Float?,
         fontColor: Color?,
         backgroundImage: String?,
         mode: Mode?,

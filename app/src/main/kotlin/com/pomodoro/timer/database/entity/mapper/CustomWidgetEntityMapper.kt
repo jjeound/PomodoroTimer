@@ -9,7 +9,8 @@ object CustomWidgetEntityMapper : EntityMapper<CustomWidget, CustomWidgetEntity>
   override fun asEntity(domain: CustomWidget): CustomWidgetEntity {
 
     return CustomWidgetEntity(
-      textStyle = domain.textStyle,
+      fontFamily = domain.fontFamily,
+      fontSize = domain.fontSize,
       fontColor = domain.fontColor,
       backgroundImage = domain.backgroundImage.toString(),
       mode = domain.mode,
@@ -33,7 +34,8 @@ object CustomWidgetEntityMapper : EntityMapper<CustomWidget, CustomWidgetEntity>
   override fun asDomain(entity: CustomWidgetEntity): CustomWidget {
     return CustomWidget(
       id = entity.id,
-      textStyle = entity.textStyle,
+      fontFamily = entity.fontFamily,
+      fontSize =  entity.fontSize,
       fontColor = entity.fontColor,
       backgroundImage = entity.backgroundImage?.toUri(),
       mode = entity.mode,
