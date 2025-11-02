@@ -52,7 +52,7 @@ fun TimerEditBox(
     mode: Int,
 ) {
     Column(
-        modifier = Modifier.wrapContentHeight().fillMaxWidth().padding(vertical = 10.dp),
+        modifier = Modifier.wrapContentHeight().fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(15.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ){
