@@ -9,7 +9,7 @@ import com.pomodoro.timer.database.PomodoroDatabase
 import com.pomodoro.timer.database.typeConverter.BgModeTypeConverter
 import com.pomodoro.timer.database.typeConverter.ModeTypeConverter
 import com.pomodoro.timer.database.typeConverter.SoundModeTypeConverter
-import com.pomodoro.timer.database.typeConverter.TextStyleTypeConverter
+import com.pomodoro.timer.database.typeConverter.FontFamilyTypeConverter
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,7 +24,7 @@ object DatabaseModule {
     @Singleton
     fun provideAppDatabase(
         application: Application,
-        textStyleTypeConverter: TextStyleTypeConverter,
+        fontFamilyTypeConverter: FontFamilyTypeConverter,
         colorTypeConverter: ColorTypeConverter,
         modeTypeConverter: ModeTypeConverter,
         soundModeTypeConverter: SoundModeTypeConverter,
@@ -32,7 +32,8 @@ object DatabaseModule {
     ): PomodoroDatabase {
         return Room
             .databaseBuilder(application, PomodoroDatabase::class.java, "PomodoroTimer.db")
-            .addTypeConverter(textStyleTypeConverter)
+            .fallbackToDestructiveMigration(true)
+            .addTypeConverter(fontFamilyTypeConverter)
             .addTypeConverter(colorTypeConverter)
             .addTypeConverter(modeTypeConverter)
             .addTypeConverter(soundModeTypeConverter)
