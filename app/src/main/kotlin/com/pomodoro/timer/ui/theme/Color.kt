@@ -10,7 +10,7 @@ val Grey200 = Color(0xFFCACACA)
 val Grey300 = Color(0xFFE5E5E5)
 val Grey400 = Color(0xFFEFEFF0)
 val Grey500 = Color(0xFFD2D2D4)
-
+val Red = Color(0xFFF83A4E)
 
 @Immutable
 data class CustomColors(
@@ -32,7 +32,8 @@ data class CustomColors(
     val selectorDivider: Color,
     val selectorContainer: Color,
     val selectorContainerSelected: Color,
-    val icon: Color
+    val icon: Color,
+    val primary: Color,
 )
 
 val LightCustomColors = CustomColors(
@@ -54,7 +55,8 @@ val LightCustomColors = CustomColors(
     selectorDivider = Grey500,
     selectorContainer = Grey400,
     selectorContainerSelected = White,
-    icon = Black
+    icon = Black,
+    primary = Red
 )
 val DarkCustomColors = CustomColors(
     surface = Black,
@@ -75,5 +77,6 @@ val DarkCustomColors = CustomColors(
     selectorDivider = Grey500,
     selectorContainer = Grey400,
     selectorContainerSelected = White,
-    icon = White
+    icon = White,
+    primary = Red
 )
