@@ -20,9 +20,9 @@ class PomodoroViewModel @Inject constructor(): ViewModel() {
         private set
     var state by mutableStateOf(TimerState.IDLE)
         private set
-    var breakTime by mutableIntStateOf(5 * 60)
+    var breakTime by mutableIntStateOf(60 * 10)
         private set
-    var repeat by mutableIntStateOf(1)
+    var repeat by mutableIntStateOf(3)
         private set
     var tempRepeat by mutableIntStateOf(repeat)
         private set
@@ -59,16 +59,17 @@ class PomodoroViewModel @Inject constructor(): ViewModel() {
         viewModelScope.launch {
             _eventFlow.emit(UiEvent.PlayStartSound)
         }
+        remainingTime = 60 * 60
         tempRepeat--
         state = TimerState.RUNNING
-        startTimer(remainingTime - breakTime) { onBreak() }
+        startTimer(remainingTime) { onStart() }
     }
 
     fun onResume() {
         if (state == TimerState.PAUSED) {
             state = TimerState.RUNNING
             startTimer(remainingTime - if (state == TimerState.RUNNING) breakTime else 0) {
-                onBreak()
+                onStart()
             }
         }
     }
@@ -80,20 +81,12 @@ class PomodoroViewModel @Inject constructor(): ViewModel() {
             while (time > 0 && state == TimerState.RUNNING) {
                 delay(1000)
                 time--
-                remainingTime = breakTime + time
+                remainingTime--
+                if (remainingTime == breakTime) {
+                    _eventFlow.emit(UiEvent.PlayBreakSound)
+                }
             }
             if (state == TimerState.RUNNING) onFinish()
-        }
-    }
-
-    fun onBreak() {
-        state = TimerState.BREAK
-        viewModelScope.launch {
-            _eventFlow.emit(UiEvent.PlayBreakSound)
-        }
-        startTimer(breakTime) {
-            remainingTime = 60 * 60
-            onStart()
         }
     }
 }
