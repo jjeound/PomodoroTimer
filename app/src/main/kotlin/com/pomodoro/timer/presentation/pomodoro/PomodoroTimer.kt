@@ -8,33 +8,39 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +48,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -49,15 +56,18 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.pomodoro.timer.data.model.CustomWidget
 import com.pomodoro.timer.R
+import com.pomodoro.timer.data.model.SoundMode
 import com.pomodoro.timer.ui.theme.CustomTheme
 import com.pomodoro.timer.ui.theme.MyTheme
 import kotlin.math.cos
@@ -71,6 +81,10 @@ fun PomodoroTimer(
     onEditText: () -> Unit,
     onEditContainer: () -> Unit,
     showButtons: Boolean,
+    onDeleteWidget: () -> Unit,
+    showDelete: Boolean,
+    onShowDeleteChange: (Boolean) -> Unit,
+    pagerEnabled: Boolean,
     viewModel: PomodoroViewModel = hiltViewModel()
 ){
     viewModel.setRP(widget.repeat)
@@ -104,49 +118,59 @@ fun PomodoroTimer(
     val vibrationEffect: (Long, Int) -> VibrationEffect = { duration, amplitude ->
         VibrationEffect.createOneShot(duration, amplitude)
     }
-//    val mediaPlayer = remember {
-//        listOf(MediaPlayer.create(context, widget.startSound), MediaPlayer.create(context, widget.breakTimeSound))
-//    }
-//    DisposableEffect(Unit) {
-//        onDispose {
-//            mediaPlayer.forEach {
-//                it.release()
-//            }
-//        }
-//    }
+    val mediaPlayer = remember {
+        listOf(MediaPlayer.create(context, widget.startSound), MediaPlayer.create(context, widget.breakTimeSound))
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer.forEach {
+                it.release()
+            }
+        }
+    }
     LaunchedEffect(editMode) {
         if(editMode && state == TimerState.RUNNING){
             viewModel.onPause()
         }
     }
-//    LaunchedEffect(Unit) {
-//        viewModel.eventFlow.collect { event ->
-//            when (event) {
-//                is UiEvent.PlayStartSound -> {
-//                    when(widget.soundMode){
-//                        SoundMode.SOUND -> {
-//                            mediaPlayer[0].start()
-//                        }
-//                        SoundMode.VIBRATE -> {
-//                            vibrator.vibrate(vibrationEffect(150L, VibrationEffect.DEFAULT_AMPLITUDE))
-//                        }
-//                        SoundMode.NO_SOUND -> {}
-//                    }
-//                }
-//                is UiEvent.PlayBreakSound -> {
-//                    when(widget.soundMode){
-//                        SoundMode.SOUND -> {
-//                            mediaPlayer[1].start()
-//                        }
-//                        SoundMode.VIBRATE -> {
-//                            vibrator.vibrate(vibrationEffect(300L, VibrationEffect.DEFAULT_AMPLITUDE))
-//                        }
-//                        SoundMode.NO_SOUND -> {}
-//                    }
-//                }
-//            }
-//        }
-//    }
+    LaunchedEffect(state) {
+        if(state == TimerState.PAUSED || state == TimerState.IDLE){
+            mediaPlayer.forEach {
+                if (it.isPlaying) {
+                    it.stop()
+                    it.prepare()
+                }
+            }
+        }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is UiEvent.PlayStartSound -> {
+                    when(widget.soundMode){
+                        SoundMode.SOUND -> {
+                            mediaPlayer[0].start()
+                        }
+                        SoundMode.VIBRATE -> {
+                            vibrator.vibrate(vibrationEffect(300L, VibrationEffect.EFFECT_TICK))
+                        }
+                        SoundMode.NO_SOUND -> {}
+                    }
+                }
+                is UiEvent.PlayBreakSound -> {
+                    when(widget.soundMode){
+                        SoundMode.SOUND -> {
+                            mediaPlayer[1].start()
+                        }
+                        SoundMode.VIBRATE -> {
+                            vibrator.vibrate(vibrationEffect(300L, VibrationEffect.EFFECT_TICK))
+                        }
+                        SoundMode.NO_SOUND -> {}
+                    }
+                }
+            }
+        }
+    }
     PomodoroTimerContent(
         modifier = modifier,
         widget = widget,
@@ -161,6 +185,10 @@ fun PomodoroTimer(
         onEditContainer = onEditContainer,
         editMode = editMode,
         showButtons = showButtons,
+        onDeleteWidget = onDeleteWidget,
+        showDelete = showDelete,
+        onShowDeleteChange = onShowDeleteChange,
+        pagerEnabled = pagerEnabled
     )
 }
 
@@ -179,6 +207,10 @@ fun PomodoroTimerContent(
     onEditContainer: () -> Unit = {},
     editMode: Boolean = false,
     showButtons: Boolean = true,
+    onDeleteWidget: () -> Unit,
+    showDelete: Boolean = false,
+    onShowDeleteChange: (Boolean) -> Unit = {},
+    pagerEnabled: Boolean = false,
 ){
     val windowInfo = LocalWindowInfo.current
     val screenSize = with(LocalDensity.current) {
@@ -189,12 +221,40 @@ fun PomodoroTimerContent(
     }
     val isLandscape = screenSize.width > screenSize.height
     val radius = (if (isLandscape) screenSize.height else screenSize.width) / 2 * 0.8f
-    Box(modifier = modifier){
+    var offsetY by remember { mutableStateOf(0f) }
+    val animatedOffsetY by animateFloatAsState(
+        targetValue = offsetY,
+        animationSpec = tween(durationMillis = 200),
+        label = "offsetYAnim"
+    )
+    Box(
+        modifier = modifier.offset(y = animatedOffsetY.dp).then(
+            if(editMode && pagerEnabled){
+                Modifier.pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onDragEnd = {
+                            if (offsetY < -150f) {
+                                onShowDeleteChange(true)
+                            }
+                            offsetY = 0f
+                        },
+                        onVerticalDrag = { change, dragAmount ->
+                            change.consume()
+                            offsetY = (offsetY + dragAmount).coerceIn(-300f, 0f)
+                        }
+                    )
+                }.clickable(
+                    enabled = showDelete,
+                    onClick = { onShowDeleteChange(false)}
+                )
+            } else Modifier
+        )
+    ){
         Box(
             modifier = Modifier.align(
-                if(editMode) Alignment.TopCenter else Alignment.Center
+                if(editMode && !isLandscape) Alignment.TopCenter else Alignment.Center
             ).padding(
-                top = if(editMode) 100.dp else 0.dp
+                top = if(editMode && !isLandscape) 100.dp else 0.dp
             ).border(
                 width = 3.dp,
                 color = if(editMode) CustomTheme.colors.indicatorBox else Color.Transparent,
@@ -204,7 +264,8 @@ fun PomodoroTimerContent(
             Timer(
                 text = minutesTxt,
                 radius = radius,
-                textStyle = widget.textStyle,
+                fontFamily = widget.fontFamily,
+                fontSize = widget.fontSize,
                 color = widget.fgColor,
                 bgColor = widget.bgColor,
                 fontColor = widget.fontColor,
@@ -230,6 +291,34 @@ fun PomodoroTimerContent(
                 )
             }
         }
+        AnimatedVisibility(
+            visible = showDelete && editMode,
+            modifier = if(isLandscape){
+                Modifier.align(Alignment.CenterStart).padding(start = 40.dp)
+            } else {
+                Modifier.align(Alignment.BottomCenter).padding(bottom = 100.dp)
+            }
+        ) {
+            IconButton(
+                onClick = {
+                    onShowDeleteChange(false)
+                    onDeleteWidget()
+                },
+                modifier = Modifier,
+                shape = CircleShape,
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = CustomTheme.colors.primary.copy(
+                        alpha = 0.5f
+                    ),
+                    contentColor = CustomTheme.colors.primary
+                )
+            ) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.trash),
+                    contentDescription = "Delete",
+                )
+            }
+        }
     }
 }
 
@@ -237,7 +326,8 @@ fun PomodoroTimerContent(
 fun Timer(
     text: List<String>,
     radius: Dp = 150.dp,
-    textStyle: TextStyle,
+    fontFamily: FontFamily,
+    fontSize: Float,
     color: Color,
     fontColor: Color,
     bgColor: Color,
@@ -254,45 +344,6 @@ fun Timer(
         modifier = Modifier.padding(20.dp),
         contentAlignment = Alignment.Center
     ) {
-        val angleStep = 360f / text.size
-        val radiusForTime = radius * 0.95f
-        text.forEachIndexed { index, str ->
-            val angle = angleStep * index
-            Box(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .wrapContentSize()
-                    .graphicsLayer {
-                        translationX = radiusForTime.toPx() * cos(Math.toRadians(angle.toDouble())).toFloat()
-                        translationY = radiusForTime.toPx() * sin(Math.toRadians(angle.toDouble())).toFloat()
-                        rotationZ = angle
-                    }.then(
-                        if (str == "0" && editMode) {
-                            Modifier.border(
-                                width = 3.dp,
-                                color = CustomTheme.colors.indicatorBox,
-                                shape = RoundedCornerShape(12.dp)
-                            ).clickable(
-                                onClick = onEditText,
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
-                            )
-                        } else {
-                            Modifier
-                        }
-                    )
-            ) {
-                Text(
-                    text = str,
-                    style = textStyle,
-                    color = fontColor,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.graphicsLayer {
-                        rotationZ = -angle // 글자를 수평으로 유지
-                    }.size(40.dp)
-                )
-            }
-        }
         val angleStepForDot = 360f / 60
         val radiusForDot = radius * 0.78f
         val radiusForCircle = radius * 0.75f
@@ -372,6 +423,49 @@ fun Timer(
             ),
             tint = handColor
         )
+        val angleStep = 360f / text.size
+        val radiusForTime = radius * 0.95f
+        text.forEachIndexed { index, str ->
+            val angle = angleStep * index
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .wrapContentSize()
+                    .graphicsLayer {
+                        translationX = radiusForTime.toPx() * cos(Math.toRadians(angle.toDouble())).toFloat()
+                        translationY = radiusForTime.toPx() * sin(Math.toRadians(angle.toDouble())).toFloat()
+                        rotationZ = angle
+                    }.then(
+                        if (str == "0" && editMode) {
+                            Modifier.border(
+                                width = 3.dp,
+                                color = CustomTheme.colors.indicatorBox,
+                                shape = RoundedCornerShape(12.dp)
+                            ).size(40.dp).clickable(
+                                onClick = onEditText,
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            )
+                        } else {
+                            Modifier
+                        }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = str,
+                    style = TextStyle(
+                        fontSize = fontSize.sp,
+                        fontFamily = fontFamily,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = fontColor,
+                    modifier = Modifier.graphicsLayer {
+                        rotationZ = -angle // 글자를 수평으로 유지
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -452,6 +546,7 @@ fun PomodoroTimerContentPreview() {
             widget = CustomWidget(),
             minutesTxt = listOf("15", "20", "25", "30", "35", "40", "45", "50", "55", "0", "5", "10"),
             editMode = true,
+            onDeleteWidget = {}
         )
     }
 }
