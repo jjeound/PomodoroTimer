@@ -2,6 +2,8 @@ package com.pomodoro.timer.di
 
 import com.pomodoro.timer.data.MainRepository
 import com.pomodoro.timer.data.MainRepositoryImpl
+import com.pomodoro.timer.data.OnboardingRepository
+import com.pomodoro.timer.data.OnboardingRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -12,4 +14,7 @@ import dagger.hilt.components.SingletonComponent
 internal interface DataModule {
     @Binds
     fun bindsMainRepository(mainRepositoryImpl: MainRepositoryImpl): MainRepository
+
+    @Binds
+    fun bindsOnboardingRepository(onboardingRepositoryImpl: OnboardingRepositoryImpl): OnboardingRepository
 }
