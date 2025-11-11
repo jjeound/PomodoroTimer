@@ -379,7 +379,8 @@ fun ColorEditForm(
                         onClick = { onColorClick(color) },
                         clicked = color == currentColor,
                         editMode = false,
-                        onDeleteColor = onDeleteColor
+                        onDeleteColor = onDeleteColor,
+                        isDefault = true
                     )
                 } else {
                     ColorBox(
@@ -408,6 +409,7 @@ fun ColorBox(
     onDeleteColor: (Color) -> Unit,
     clicked: Boolean,
     editMode: Boolean,
+    isDefault: Boolean = false,
 ){
     Box(
         modifier = Modifier
@@ -415,6 +417,15 @@ fun ColorBox(
             .background(containerColor, shape = CircleShape)
             .clickable(
                 onClick = onClick
+            ).then(
+                if(isDefault){
+                    Modifier.border(
+                        width = 2.dp, color = CustomTheme.colors.buttonBorder,
+                        shape = CircleShape
+                    )
+                } else {
+                    Modifier
+                }
             ),
         contentAlignment = Alignment.Center
     ){
