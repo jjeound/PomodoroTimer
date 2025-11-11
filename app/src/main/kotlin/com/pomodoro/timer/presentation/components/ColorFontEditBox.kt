@@ -3,11 +3,12 @@ package com.pomodoro.timer.presentation.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -42,6 +43,8 @@ fun ColorFontEditBox(
         customTypography.textPreview2,
         customTypography.textPreview3,
         customTypography.textPreview4,
+        customTypography.textPreview5,
+        customTypography.textPreview6,
     )
     Column(
         modifier = Modifier.wrapContentHeight().fillMaxWidth(),
@@ -75,11 +78,12 @@ fun ColorFontEditBox(
                 style = CustomTheme.typography.editTitleSmall,
                 color = CustomTheme.colors.text,
             )
-            Row(
+            LazyRow (
+                state = rememberLazyListState(),
                 modifier = Modifier.wrapContentWidth(),
                 horizontalArrangement = Arrangement.spacedBy(33.dp)
             ) {
-                repeat(4){ index ->
+                items(textStyles.size) { index ->
                     val textStyle = textStyles[index]
                     Text(
                         modifier = Modifier.clickable(
