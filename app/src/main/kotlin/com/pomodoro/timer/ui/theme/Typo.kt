@@ -29,6 +29,8 @@ data class CustomTypography(
     val textPreview2: TextStyle,
     val textPreview3: TextStyle,
     val textPreview4: TextStyle,
+    val textPreview5: TextStyle,
+    val textPreview6: TextStyle,
 )
 
 val pretendard = FontFamily(
@@ -66,6 +68,11 @@ val bebasNeue = FontFamily(
     Font(R.font.bebasneue_regular, FontWeight.Normal),
 )
 
+val mountainsOfChristmas = FontFamily(
+    Font(R.font.mountains_of_christmas_bold, FontWeight.Bold),
+    Font(R.font.mountains_of_christmas_regular, FontWeight.Normal)
+)
+
 val customTypography =  CustomTypography(
     buttonTimerSmall = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.Light, fontSize = 30.sp),
     buttonTimerLarge = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.Light, fontSize = 40.sp),
@@ -86,4 +93,6 @@ val customTypography =  CustomTypography(
     textPreview2 = TextStyle(fontFamily = comfortaa, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
     textPreview3 = TextStyle(fontFamily = freesentation, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
     textPreview4 = TextStyle(fontFamily = bebasNeue, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
+    textPreview5 = TextStyle(fontFamily = digitalMonoFont, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
+    textPreview6 = TextStyle(fontFamily = mountainsOfChristmas, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
 )
