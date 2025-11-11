@@ -38,7 +38,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -85,6 +85,7 @@ fun PomodoroTimer(
     showDelete: Boolean,
     onShowDeleteChange: (Boolean) -> Unit,
     pagerEnabled: Boolean,
+    isLandscape: Boolean,
     viewModel: PomodoroViewModel = hiltViewModel()
 ){
     viewModel.setRP(widget.repeat)
@@ -118,9 +119,7 @@ fun PomodoroTimer(
     val vibrationEffect: (Long, Int) -> VibrationEffect = { duration, amplitude ->
         VibrationEffect.createOneShot(duration, amplitude)
     }
-    val mediaPlayer = remember {
-        listOf(MediaPlayer.create(context, widget.startSound), MediaPlayer.create(context, widget.breakTimeSound))
-    }
+    val mediaPlayer = listOf(MediaPlayer.create(context, widget.startSound), MediaPlayer.create(context, widget.breakTimeSound))
     DisposableEffect(Unit) {
         onDispose {
             mediaPlayer.forEach {
@@ -152,7 +151,11 @@ fun PomodoroTimer(
                             mediaPlayer[0].start()
                         }
                         SoundMode.VIBRATE -> {
-                            vibrator.vibrate(vibrationEffect(300L, VibrationEffect.EFFECT_TICK))
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+                                vibrator.vibrate(vibrationEffect(300L, VibrationEffect.EFFECT_TICK))
+                            } else {
+                                vibrator.vibrate(300L)
+                            }
                         }
                         SoundMode.NO_SOUND -> {}
                     }
@@ -163,7 +166,11 @@ fun PomodoroTimer(
                             mediaPlayer[1].start()
                         }
                         SoundMode.VIBRATE -> {
-                            vibrator.vibrate(vibrationEffect(300L, VibrationEffect.EFFECT_TICK))
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+                                vibrator.vibrate(vibrationEffect(300L, VibrationEffect.EFFECT_TICK))
+                            } else {
+                                vibrator.vibrate(300L)
+                            }
                         }
                         SoundMode.NO_SOUND -> {}
                     }
@@ -188,7 +195,8 @@ fun PomodoroTimer(
         onDeleteWidget = onDeleteWidget,
         showDelete = showDelete,
         onShowDeleteChange = onShowDeleteChange,
-        pagerEnabled = pagerEnabled
+        pagerEnabled = pagerEnabled,
+        isLandscape = isLandscape
     )
 }
 
@@ -211,6 +219,7 @@ fun PomodoroTimerContent(
     showDelete: Boolean = false,
     onShowDeleteChange: (Boolean) -> Unit = {},
     pagerEnabled: Boolean = false,
+    isLandscape: Boolean,
 ){
     val windowInfo = LocalWindowInfo.current
     val screenSize = with(LocalDensity.current) {
@@ -219,9 +228,8 @@ fun PomodoroTimerContent(
             height = windowInfo.containerSize.height.toDp()
         )
     }
-    val isLandscape = screenSize.width > screenSize.height
     val radius = (if (isLandscape) screenSize.height else screenSize.width) / 2 * 0.8f
-    var offsetY by remember { mutableStateOf(0f) }
+    var offsetY by remember { mutableFloatStateOf(0f) }
     val animatedOffsetY by animateFloatAsState(
         targetValue = offsetY,
         animationSpec = tween(durationMillis = 200),
@@ -546,7 +554,8 @@ fun PomodoroTimerContentPreview() {
             widget = CustomWidget(),
             minutesTxt = listOf("15", "20", "25", "30", "35", "40", "45", "50", "55", "0", "5", "10"),
             editMode = true,
-            onDeleteWidget = {}
+            onDeleteWidget = {},
+            isLandscape = false
         )
     }
 }
