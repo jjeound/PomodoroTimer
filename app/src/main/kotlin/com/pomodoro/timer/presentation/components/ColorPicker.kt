@@ -63,7 +63,7 @@ fun ColorPicker(
                 ),
                 imageVector = ImageVector.vectorResource(R.drawable.close),
                 contentDescription = null,
-                tint = CustomTheme.colors.icon
+                tint = Color.Unspecified
             )
             Icon(
                 modifier = Modifier.clickable(
@@ -71,7 +71,7 @@ fun ColorPicker(
                 ),
                 imageVector = ImageVector.vectorResource(R.drawable.check),
                 contentDescription = null,
-                tint = CustomTheme.colors.icon
+                tint = Color.Unspecified
             )
         }
         Column(
