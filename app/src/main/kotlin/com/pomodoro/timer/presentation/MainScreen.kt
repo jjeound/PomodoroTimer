@@ -6,11 +6,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -39,7 +38,6 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Devices.TABLET
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -68,22 +66,30 @@ fun MainScreen(
     val showButtons = viewModel.showButtons
     val config = LocalConfiguration.current
     val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isSystemDarkTheme = isSystemInDarkTheme()
+    LaunchedEffect(true) {
+        viewModel.getWidgets(
+            isSystemInDarkTheme = isSystemDarkTheme
+        )
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
     ){
-        if(uiState != MainUiState.Loading) {
+        if(uiState != MainUiState.Loading && currentWidget != null && editingWidget != null) {
             MainScreenContent(
                 widgets = widgetsByMode,
                 editMode = editMode,
                 onEditModeChange = { editMode = it },
                 mode = mode,
-                currentWidget = currentWidget,
-                editingWidget = editingWidget,
+                currentWidget = currentWidget!!,
+                editingWidget = editingWidget!!,
                 editWidget = viewModel::editWidget,
                 onCancelEdit = viewModel::onCancelEdit,
                 onDoneEdit = viewModel::onDoneEdit,
-                onAddNewWidget = viewModel::onAddNewWidget,
+                onAddNewWidget = {
+                    viewModel.onAddNewWidget(isSystemDarkTheme)
+                },
                 onNextWidget = viewModel::onNextWidget,
                 onAddNewColor = viewModel::saveColor,
                 onUpdateColor = viewModel::updateColor,
@@ -92,7 +98,7 @@ fun MainScreen(
                 isLandscape = isLandscape,
                 showButtons = showButtons,
                 onShowButtonsChange = viewModel::onShowButtonsChange,
-                onDeleteWidget = viewModel::deleteWidget
+                onDeleteWidget = viewModel::deleteWidget,
             )
         } else {
            Box(
@@ -205,7 +211,8 @@ fun MainScreenContent(
                         onDeleteWidget = onDeleteWidget,
                         showDelete = showDelete,
                         onShowDeleteChange = { showDelete = it },
-                        pagerEnabled = pagerEnabled
+                        pagerEnabled = pagerEnabled,
+                        isLandscape = isLandscape
                     )
                 }
                 if (showContainerEditBottomSheet || showTextEditBottomSheet || showColorPicker) {
@@ -478,7 +485,8 @@ fun MainScreenContent(
                     onDeleteWidget = onDeleteWidget,
                     showDelete = showDelete,
                     onShowDeleteChange = { showDelete = it },
-                    pagerEnabled = pagerEnabled
+                    pagerEnabled = pagerEnabled,
+                    isLandscape = isLandscape
                 )
             }
             if(showContainerEditBottomSheet){
@@ -788,7 +796,7 @@ fun MainScreenContentTabletPreview(){
             isLandscape = true,
             showButtons = true,
             onShowButtonsChange = {},
-            onDeleteWidget = {}
+            onDeleteWidget = {},
         )
     }
 }

@@ -11,6 +11,8 @@ import androidx.lifecycle.viewModelScope
 import com.pomodoro.timer.data.model.CustomWidget
 import com.pomodoro.timer.data.MainRepository
 import com.pomodoro.timer.data.model.Mode
+import com.pomodoro.timer.ui.theme.Black
+import com.pomodoro.timer.ui.theme.White
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +22,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val repository: MainRepository
+    private val repository: MainRepository,
 ): ViewModel() {
 
     val uiState: MutableStateFlow<MainUiState> = MutableStateFlow(MainUiState.Loading)
@@ -31,10 +33,10 @@ class MainViewModel @Inject constructor(
     private val _widgetsByMode: MutableStateFlow<List<CustomWidget>> = MutableStateFlow(emptyList())
     val widgetsByMode = _widgetsByMode.asStateFlow()
 
-    private val _currentWidget: MutableStateFlow<CustomWidget> = MutableStateFlow(CustomWidget())
+    private val _currentWidget: MutableStateFlow<CustomWidget?> = MutableStateFlow(null)
     val currentWidget = _currentWidget.asStateFlow()
 
-    private val _editingWidget: MutableStateFlow<CustomWidget> = MutableStateFlow(CustomWidget())
+    private val _editingWidget: MutableStateFlow<CustomWidget?> = MutableStateFlow(null)
     val editingWidget = _editingWidget.asStateFlow()
 
     private val _colors: MutableStateFlow<List<Color>> = MutableStateFlow(listOf(
@@ -48,11 +50,10 @@ class MainViewModel @Inject constructor(
         private set
 
     init {
-        getWidgets()
         getColors()
     }
 
-    fun getWidgets(){
+    fun getWidgets(isSystemInDarkTheme: Boolean? = null){
         viewModelScope.launch {
             repository.getAllCustomWidgets(
                 onStart = { uiState.value = MainUiState.Loading },
@@ -61,7 +62,21 @@ class MainViewModel @Inject constructor(
                     Log.d("MainViewModel", "getWidgets: $message")
                 }
             ).collect {
-                _widgets.value = it
+                if (it.isEmpty()){
+                    if(isSystemInDarkTheme != null){
+                        if(isSystemInDarkTheme) {
+                            _widgets.value = listOf(CustomWidget(
+                                fontColor = White,
+                                edgeColor = White,
+                                bgColor = Black
+                            ))
+                        } else {
+                            _widgets.value = listOf(CustomWidget())
+                        }
+                    } else _widgets.value = listOf(CustomWidget())
+                } else {
+                    _widgets.value = it
+                }
                 _widgetsByMode.value = _widgets.value.filter { widget ->
                     widget.mode == mode
                 }
@@ -82,15 +97,24 @@ class MainViewModel @Inject constructor(
     }
 
     fun onDoneEdit(){
-        if(_editingWidget.value.id != 0L)
-            updateWidget(_editingWidget.value)
-        else saveWidget(_editingWidget.value)
+        if(_editingWidget.value!!.id != 0L)
+        updateWidget(_editingWidget.value!!)
+        else saveWidget(_editingWidget.value!!)
     }
 
-    fun onAddNewWidget(){
-        _widgetsByMode.value += CustomWidget(
-            mode = this.mode
-        )
+    fun onAddNewWidget(isSystemInDarkTheme: Boolean){
+        if(isSystemInDarkTheme){
+            _widgetsByMode.value += CustomWidget(
+                mode = this.mode,
+                fontColor = White,
+                edgeColor = White,
+                bgColor = Black
+            )
+        } else {
+            _widgetsByMode.value += CustomWidget(
+                mode = this.mode
+            )
+        }
         _editingWidget.value = _widgetsByMode.value.last()
     }
 
@@ -127,7 +151,7 @@ class MainViewModel @Inject constructor(
     fun deleteWidget(){
         viewModelScope.launch {
             repository.deleteWidget(
-                id = _editingWidget.value.id,
+                id = _editingWidget.value!!.id,
                 onStart = { uiState.value = MainUiState.Loading },
                 onComplete = { getWidgets() },
                 onError = { message -> uiState.value = MainUiState.Error("다시 삭제해주세요")

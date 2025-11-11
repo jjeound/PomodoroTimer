@@ -69,7 +69,7 @@ class MainRepositoryImpl @Inject constructor(
                         it.id == (id ?: 0L)
                     }
                     if(widgets.isEmpty()){
-                        emit(listOf(CustomWidget()))
+                        emit(emptyList())
                     } else {
                         emit(widgets)
                     }
