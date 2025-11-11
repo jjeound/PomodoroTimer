@@ -1,5 +1,6 @@
 package com.pomodoro.timer.presentation.components
 
+import android.media.MediaPlayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,6 +19,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.pomodoro.timer.R
 import com.pomodoro.timer.ui.theme.CustomTheme
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.pomodoro.timer.data.model.SoundMode
@@ -43,17 +46,28 @@ fun SoundEditBox(
     onChangeStartSound: (Int) -> Unit,
     onChangeBreakTimeSound: (Int) -> Unit,
 ) {
+    val context = LocalContext.current
     var isExpandStartSoundDropdown by remember { mutableStateOf(false) }
     var isExpandBreakTimeSoundDropdown by remember { mutableStateOf(false) }
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer?.release()
+        }
+    }
     val startSoundList = listOf(
         Pair("buzzer", R.raw.buzzer ),
         Pair("game over", R.raw.game_over ),
         Pair("sneeze", R.raw.sneeze ),
+        Pair("digital_watch", R.raw.digital_watch),
+        Pair("alarm_clock", R.raw.alarm_clock ),
     )
     val restartSoundList = listOf(
         Pair("buzzer", R.raw.buzzer ),
         Pair("game over", R.raw.game_over ),
         Pair("sneeze", R.raw.sneeze ),
+        Pair("digital watch", R.raw.digital_watch),
+        Pair("alarm clock", R.raw.alarm_clock ),
     )
     Column(
         modifier = Modifier.wrapContentHeight().fillMaxWidth(),
@@ -134,11 +148,17 @@ fun SoundEditBox(
             )
             Box(
                 modifier = Modifier.fillMaxWidth(0.8f).height(32.dp).background(
-                    color = CustomTheme.colors.textFieldContainer,
+                    color = if(soundMode == SoundMode.SOUND){
+                        CustomTheme.colors.textFieldContainer
+                    } else {
+                        CustomTheme.colors.textFieldContainerUnfocused
+                    },
                     shape = RoundedCornerShape(12.dp)
                 ).clickable(
                     onClick = {
-                        isExpandStartSoundDropdown = true
+                        if(soundMode == SoundMode.SOUND){
+                            isExpandStartSoundDropdown = true
+                        }
                     }
                 ),
                 contentAlignment = Alignment.Center
@@ -174,8 +194,11 @@ fun SoundEditBox(
                                 )
                             },
                             onClick = {
+                                mediaPlayer?.release()
                                 isExpandStartSoundDropdown = false
                                 onChangeStartSound(it.second)
+                                mediaPlayer = MediaPlayer.create(context, it.second)
+                                mediaPlayer?.start()
                             },
                         )
                         if(it != startSoundList.last()){
@@ -204,11 +227,17 @@ fun SoundEditBox(
             )
             Box(
                 modifier = Modifier.fillMaxWidth(0.8f).height(32.dp).background(
-                    color = CustomTheme.colors.textFieldContainer,
+                    color = if(soundMode == SoundMode.SOUND){
+                        CustomTheme.colors.textFieldContainer
+                    } else {
+                        CustomTheme.colors.textFieldContainerUnfocused
+                    },
                     shape = RoundedCornerShape(12.dp)
                 ).clickable(
                     onClick = {
-                        isExpandBreakTimeSoundDropdown = true
+                        if(soundMode == SoundMode.SOUND){
+                            isExpandBreakTimeSoundDropdown = true
+                        }
                     }
                 ),
                 contentAlignment = Alignment.Center
@@ -244,8 +273,11 @@ fun SoundEditBox(
                                 )
                             },
                             onClick = {
+                                mediaPlayer?.release()
                                 isExpandBreakTimeSoundDropdown = false
                                 onChangeBreakTimeSound(it.second)
+                                mediaPlayer = MediaPlayer.create(context, it.second)
+                                mediaPlayer?.start()
                             },
                         )
                         if(it != restartSoundList.last()){
