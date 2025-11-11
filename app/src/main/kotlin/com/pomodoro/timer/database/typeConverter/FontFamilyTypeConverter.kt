@@ -5,7 +5,9 @@ import androidx.room.ProvidedTypeConverter
 import androidx.room.TypeConverter
 import com.pomodoro.timer.ui.theme.bebasNeue
 import com.pomodoro.timer.ui.theme.comfortaa
+import com.pomodoro.timer.ui.theme.digitalMonoFont
 import com.pomodoro.timer.ui.theme.freesentation
+import com.pomodoro.timer.ui.theme.mountainsOfChristmas
 import com.pomodoro.timer.ui.theme.pretendard
 import javax.inject.Inject
 
@@ -18,6 +20,8 @@ class FontFamilyTypeConverter @Inject constructor() {
             comfortaa -> "comfortaa"
             freesentation -> "freesentation"
             bebasNeue -> "bebasNeue"
+            digitalMonoFont -> "digitalMonoFont"
+            mountainsOfChristmas -> "mountainsOfChristmas"
             else -> "pretendard"
         }
     }
@@ -29,6 +33,8 @@ class FontFamilyTypeConverter @Inject constructor() {
             "comfortaa" -> comfortaa
             "freesentation" -> freesentation
             "bebasNeue" -> bebasNeue
+            "digitalMonoFont" -> digitalMonoFont
+            "mountainsOfChristmas" -> mountainsOfChristmas
             else -> pretendard
         }
     }
