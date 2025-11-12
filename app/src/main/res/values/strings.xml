@@ -27,4 +27,13 @@
     <string name="hand_color">Hand Color</string>
     <string name="edge_color">Edge Color</string>
     <string name="color_alert">you can\'t change this color</string>
+    <string name="skip">SKIP</string>
+    <string name="lets_start">START</string>
+    <string name="onboarding_title_1">Make your own custom\nPOMODORO TIMER!</string>
+    <string name="onboarding_title_3">Tap and hold to edit!</string>
+    <string name="bg_mode">Background Mode</string>
+    <string name="bg_instruction">Visible only in landscape mode</string>
+    <string name="idle">IDLE</string>
+    <string name="snow">SNOW</string>
+    <string name="onboarding_title_2">Double tap to hide buttons</string>
 </resources>
