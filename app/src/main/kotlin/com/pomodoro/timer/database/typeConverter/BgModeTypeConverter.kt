@@ -12,8 +12,7 @@ class BgModeTypeConverter @Inject constructor() {
     fun fromBgMode(bgMode: BgMode): Int {
         return when(bgMode){
             BgMode.IDLE -> 0
-            BgMode.RAIN -> 1
-            BgMode.SNOW -> 2
+            BgMode.SNOW -> 1
         }
     }
 
@@ -21,8 +20,7 @@ class BgModeTypeConverter @Inject constructor() {
     fun toBgMode(value: Int): BgMode {
         return when(value){
             0 -> BgMode.IDLE
-            1 -> BgMode.RAIN
-            2 -> BgMode.SNOW
+            1-> BgMode.SNOW
             else -> BgMode.IDLE
         }
     }
