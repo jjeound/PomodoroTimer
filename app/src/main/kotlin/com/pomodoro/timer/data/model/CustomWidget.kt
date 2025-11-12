@@ -46,6 +46,5 @@ enum class SoundMode {
 
 enum class BgMode {
     IDLE,
-    RAIN,
     SNOW
 }
