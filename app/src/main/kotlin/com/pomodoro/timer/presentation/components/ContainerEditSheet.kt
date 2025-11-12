@@ -53,6 +53,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.pomodoro.timer.R
+import com.pomodoro.timer.data.model.BgMode
 import com.pomodoro.timer.ui.theme.CustomTheme
 import com.pomodoro.timer.ui.theme.MyTheme
 
@@ -72,12 +73,14 @@ fun ContainerEditSheet(
     colors: List<Color>,
     currentColor: Color,
     isLandScape: Boolean,
+    onClickBgMode: (BgMode) -> Unit,
+    bgMode: BgMode
 ) {
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = false,
     )
-    val pagerState = rememberPagerState(pageCount = {4})
+    val pagerState = rememberPagerState(pageCount = {5})
     val albumLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
@@ -151,6 +154,8 @@ fun ContainerEditSheet(
                     }
                 },
                 onDeleteColor = onDeleteColor,
+                bgMode = bgMode,
+                onClickBgMode = onClickBgMode,
             )
         }
     } else {
@@ -177,7 +182,9 @@ fun ContainerEditSheet(
                         requestPermissionLauncher.launch(galleryPermissions)
                     }
                 },
-                onDeleteColor = onDeleteColor
+                onDeleteColor = onDeleteColor,
+                bgMode = bgMode,
+                onClickBgMode = onClickBgMode,
             )
         }
     }
@@ -197,6 +204,8 @@ fun ContainerEditSheetContent(
     onColorPickerClick: (index: Int) -> Unit,
     onImagePickerClick: () -> Unit,
     onDeleteColor: (Color) -> Unit,
+    bgMode: BgMode,
+    onClickBgMode: (BgMode) -> Unit,
 ){
     Column(
         modifier = Modifier.wrapContentHeight().fillMaxWidth().padding(vertical = 10.dp),
@@ -280,6 +289,12 @@ fun ContainerEditSheetContent(
                         onDeleteColor = onDeleteColor,
                     )
                 }
+                4 -> {
+                    BgEditBox(
+                        bgMode = bgMode,
+                        onClickBgMode = onClickBgMode
+                    )
+                }
             }
         }
         Row(
@@ -287,7 +302,7 @@ fun ContainerEditSheetContent(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            repeat(4) { index ->
+            repeat(5) { index ->
                 val isFocused = pagerState.currentPage == index
                 Box(
                     modifier = Modifier
@@ -531,8 +546,10 @@ fun ContainerEditSheetPreview() {
                 Color.Black,
             ),
             currentColor = Color.Red,
-            isLandScape = true,
-            onDeleteColor = {}
+            isLandScape = false,
+            onDeleteColor = {},
+            bgMode = BgMode.IDLE,
+            onClickBgMode = {}
         )
     }
 }
