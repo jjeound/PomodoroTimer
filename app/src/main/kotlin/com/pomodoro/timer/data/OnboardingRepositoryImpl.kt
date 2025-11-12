@@ -14,15 +14,15 @@ class OnboardingRepositoryImpl @Inject constructor(
 ): OnboardingRepository {
     @WorkerThread
     override suspend fun isFirstEnter(): Boolean {
-        val isFirstEnter = dataStore.data.map { pref ->
+        return dataStore.data.map { pref ->
             pref[IS_FIRST_ENTER]
         }.firstOrNull() ?: true
+    }
 
-        if (isFirstEnter){
-            dataStore.edit { prefs ->
-                prefs[IS_FIRST_ENTER] = false
-            }
+    @WorkerThread
+    override suspend fun onFinishOnboarding() {
+        dataStore.edit { prefs ->
+            prefs[IS_FIRST_ENTER] = false
         }
-        return isFirstEnter
     }
 }
