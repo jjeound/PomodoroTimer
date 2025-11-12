@@ -31,6 +31,8 @@ data class CustomTypography(
     val textPreview4: TextStyle,
     val textPreview5: TextStyle,
     val textPreview6: TextStyle,
+    val onboardingButtonText: TextStyle,
+    val onboardingTitle: TextStyle,
 )
 
 val pretendard = FontFamily(
@@ -95,4 +97,6 @@ val customTypography =  CustomTypography(
     textPreview4 = TextStyle(fontFamily = bebasNeue, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
     textPreview5 = TextStyle(fontFamily = digitalMonoFont, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
     textPreview6 = TextStyle(fontFamily = mountainsOfChristmas, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
+    onboardingButtonText = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.SemiBold, fontSize = 20.sp),
+    onboardingTitle = TextStyle(fontFamily = pretendard, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
 )
