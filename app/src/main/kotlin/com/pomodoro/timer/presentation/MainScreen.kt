@@ -41,7 +41,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.pomodoro.timer.R
+import com.pomodoro.timer.data.model.BgMode
 import com.pomodoro.timer.data.model.CustomWidget
 import com.pomodoro.timer.data.model.Mode
 import com.pomodoro.timer.presentation.components.ColorPicker
@@ -105,8 +111,8 @@ fun MainScreen(
                modifier = Modifier.fillMaxSize()
            ){
                CircularProgressIndicator(
-                   modifier = Modifier.align(Alignment.Center).size(100.dp),
-                   color = CustomTheme.colors.icon
+                   modifier = Modifier.align(Alignment.Center).size(80.dp),
+                   color = CustomTheme.colors.primary
                )
            }
         }
@@ -155,9 +161,21 @@ fun MainScreenContent(
             showDelete = false
         }
     }
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.snow_animation))
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = LottieConstants.IterateForever
+    )
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
+        if(!editMode && isLandscape && currentWidget.bgMode == BgMode.SNOW){
+            LottieAnimation(
+                modifier = Modifier.fillMaxSize(),
+                composition = composition,
+                progress = { progress },
+            )
+        }
         if (editMode && pagerEnabled) {
             EditButtons(
                 modifier = Modifier
@@ -283,7 +301,15 @@ fun MainScreenContent(
                         colors = colors,
                         currentColor = currentColor,
                         isLandScape = true,
-                        onDeleteColor = onDeleteColor
+                        onDeleteColor = onDeleteColor,
+                        bgMode = editingWidget.bgMode,
+                        onClickBgMode = {
+                            editWidget(
+                                editingWidget.copy(
+                                    bgMode = it
+                                )
+                            )
+                        }
                     )
                 }
                 if(showTextEditBottomSheet){
@@ -551,7 +577,15 @@ fun MainScreenContent(
                     colors = colors,
                     currentColor = currentColor,
                     isLandScape = false,
-                    onDeleteColor = onDeleteColor
+                    onDeleteColor = onDeleteColor,
+                    bgMode = editingWidget.bgMode,
+                    onClickBgMode = {
+                        editWidget(
+                            editingWidget.copy(
+                                bgMode = it
+                            )
+                        )
+                    }
                 )
             }
             if(showTextEditBottomSheet){
