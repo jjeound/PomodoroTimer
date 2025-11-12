@@ -24,7 +24,13 @@ class OnboardingViewModel @Inject constructor(
     fun isFirstEnter(){
         viewModelScope.launch {
             _isFirstEnter.value = repository.isFirstEnter()
+        }
+    }
 
+    fun onFinishOnboarding(){
+        viewModelScope.launch {
+            repository.onFinishOnboarding()
+            _isFirstEnter.value = false
         }
     }
 }

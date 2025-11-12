@@ -24,7 +24,9 @@ class MainActivity : ComponentActivity() {
                 val isFirstEnter by viewModel.isFirstEnter.collectAsStateWithLifecycle()
                 if(isFirstEnter != null){
                     if(isFirstEnter!!){
-                        OnboardingScreen()
+                        OnboardingScreen(
+                            onFinish = viewModel::onFinishOnboarding
+                        )
                     } else {
                         MainScreen()
                     }
