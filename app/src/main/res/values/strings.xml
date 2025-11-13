@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PomodoroTimer</string>
+    <string name="app_name">Pomodoro Timer</string>
     <string name="reset">RESET</string>
     <string name="start">START</string>
     <string name="stop">STOP</string>
