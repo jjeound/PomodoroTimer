@@ -36,6 +36,9 @@ class MainViewModel @Inject constructor(
     private val _currentWidget: MutableStateFlow<CustomWidget?> = MutableStateFlow(null)
     val currentWidget = _currentWidget.asStateFlow()
 
+    private val _editingWidgets: MutableStateFlow<List<CustomWidget>> = MutableStateFlow(emptyList())
+    val editingWidgets = _editingWidgets.asStateFlow()
+
     private val _editingWidget: MutableStateFlow<CustomWidget?> = MutableStateFlow(null)
     val editingWidget = _editingWidget.asStateFlow()
 
@@ -81,6 +84,7 @@ class MainViewModel @Inject constructor(
                     widget.mode == mode
                 }
                 _currentWidget.value = _widgetsByMode.value.first()
+                _editingWidgets.value = _widgetsByMode.value
                 _editingWidget.value = _currentWidget.value
             }
         }
@@ -93,6 +97,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun onCancelEdit(){
+        _editingWidgets.value = _widgetsByMode.value
         _editingWidget.value = _currentWidget.value
     }
 
@@ -104,22 +109,22 @@ class MainViewModel @Inject constructor(
 
     fun onAddNewWidget(isSystemInDarkTheme: Boolean){
         if(isSystemInDarkTheme){
-            _widgetsByMode.value += CustomWidget(
+            _editingWidgets.value += CustomWidget(
                 mode = this.mode,
                 fontColor = White,
                 edgeColor = White,
                 bgColor = Black
             )
         } else {
-            _widgetsByMode.value += CustomWidget(
+            _editingWidgets.value += CustomWidget(
                 mode = this.mode
             )
         }
-        _editingWidget.value = _widgetsByMode.value.last()
+        _editingWidget.value = _editingWidgets.value.last()
     }
 
     fun onNextWidget(index: Int){
-        _editingWidget.value = _widgetsByMode.value[index]
+        _editingWidget.value = _editingWidgets.value[index]
     }
 
     fun saveWidget(widget: CustomWidget){

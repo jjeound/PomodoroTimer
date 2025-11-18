@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -57,6 +58,7 @@ import com.pomodoro.timer.presentation.pomodoro.PomodoroTextEditSheet
 import com.pomodoro.timer.presentation.pomodoro.PomodoroTimer
 import com.pomodoro.timer.ui.theme.CustomTheme
 import com.pomodoro.timer.ui.theme.MyTheme
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(
@@ -66,6 +68,7 @@ fun MainScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val currentWidget by viewModel.currentWidget.collectAsStateWithLifecycle()
     val editingWidget by viewModel.editingWidget.collectAsStateWithLifecycle()
+    val editingWidgets by viewModel.editingWidgets.collectAsStateWithLifecycle()
     val widgetsByMode by viewModel.widgetsByMode.collectAsStateWithLifecycle()
     val colors by viewModel.colors.collectAsStateWithLifecycle()
     val mode = viewModel.mode
@@ -84,7 +87,7 @@ fun MainScreen(
     ){
         if(uiState != MainUiState.Loading && currentWidget != null && editingWidget != null) {
             MainScreenContent(
-                widgets = widgetsByMode,
+                widgets = if(editMode) editingWidgets else widgetsByMode,
                 editMode = editMode,
                 onEditModeChange = { editMode = it },
                 mode = mode,
@@ -153,6 +156,8 @@ fun MainScreenContent(
     var isAddColor by remember { mutableStateOf(true) }
     val pagerEnabled = !showTextEditBottomSheet && !showContainerEditBottomSheet && !showColorPicker
     var showDelete by remember { mutableStateOf(false) }
+    var containerEditPagerIndex by remember { mutableIntStateOf(0) }
+    val scope = rememberCoroutineScope()
     LaunchedEffect(widgets.size) {
         if(widgets.isNotEmpty() && editMode) pagerState.animateScrollToPage(widgets.lastIndex)
     }
@@ -184,7 +189,12 @@ fun MainScreenContent(
                     .align(Alignment.TopCenter)
                     .zIndex(1f),
                 onEditModeChange = onEditModeChange,
-                onDoneEdit = onDoneEdit,
+                onDoneEdit = {
+                    onDoneEdit()
+                    scope.launch {
+                        pagerState.animateScrollToPage(0)
+                    }
+                },
                 onCancelEdit = onCancelEdit
             )
         }
@@ -205,7 +215,8 @@ fun MainScreenContent(
                             interactionSource = remember { MutableInteractionSource() }
                         ),
                     state = pagerState,
-                    userScrollEnabled = editMode && pagerEnabled
+                    userScrollEnabled = editMode && pagerEnabled,
+                    key = { index -> widgets[index].id }
                 ) {
                     LaunchedEffect(pagerState) {
                         snapshotFlow { pagerState.currentPage }
@@ -271,6 +282,7 @@ fun MainScreenContent(
                             )
                         },
                         onColorPickerClick = { index ->
+                            containerEditPagerIndex = index
                             isAddColor = false
                             showColorPicker = true
                             showContainerEditBottomSheet = false
@@ -309,7 +321,8 @@ fun MainScreenContent(
                                     bgMode = it
                                 )
                             )
-                        }
+                        },
+                        index = containerEditPagerIndex
                     )
                 }
                 if(showTextEditBottomSheet){
@@ -489,7 +502,8 @@ fun MainScreenContent(
                     )
                     .align(Alignment.Center),
                 state = pagerState,
-                userScrollEnabled = editMode && pagerEnabled
+                userScrollEnabled = editMode && pagerEnabled,
+                key = { index -> widgets[index].id }
             ) {
                 LaunchedEffect(pagerState) {
                     snapshotFlow { pagerState.currentPage }
@@ -547,12 +561,14 @@ fun MainScreenContent(
                         )
                     },
                     onColorPickerClick = { index ->
+                        containerEditPagerIndex = index
                         isAddColor = false
                         showColorPicker = true
                         showContainerEditBottomSheet = false
                         colorPickerOption = index
                     },
                     onAddBtnClick = { index ->
+                        containerEditPagerIndex = index
                         isAddColor = true
                         showColorPicker = true
                         showContainerEditBottomSheet = false
@@ -585,7 +601,8 @@ fun MainScreenContent(
                                 bgMode = it
                             )
                         )
-                    }
+                    },
+                    index = containerEditPagerIndex
                 )
             }
             if(showTextEditBottomSheet){
