@@ -64,7 +64,7 @@ fun ContainerEditSheet(
     onDismissRequest: () -> Unit,
     onColorClick: (Color) -> Unit,
     onBackgroundColorClick: (Color) -> Unit,
-    onAddImage: (Uri) -> Unit,
+    onAddImage: (String) -> Unit,
     onAddBtnClick: (index: Int) -> Unit,
     onColorPickerClick: (index: Int) -> Unit,
     onHandColorClick: (Color) -> Unit,
@@ -74,19 +74,29 @@ fun ContainerEditSheet(
     currentColor: Color,
     isLandScape: Boolean,
     onClickBgMode: (BgMode) -> Unit,
-    bgMode: BgMode
+    bgMode: BgMode,
+    index: Int,
 ) {
     val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = false,
     )
-    val pagerState = rememberPagerState(pageCount = {5})
+    val pagerState = rememberPagerState(
+        initialPage = index,
+        pageCount = { 5 }
+    )
     val albumLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
                 uri?.let {
-                    onAddImage(it)
+                    // ⭐ 영구 권한 획득
+                    val flags = result.data!!.flags and
+                            (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+
+                    context.contentResolver.takePersistableUriPermission(it, flags)
+
+                    onAddImage(it.toString())
                 }
             }
         }
@@ -386,7 +396,9 @@ fun ColorEditForm(
                 .padding(vertical = 4.dp, horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            items(colors.size) { index ->
+            items(
+                colors.size,
+            ) { index ->
                 val color = colors[index]
                 if(index < 4){
                     ColorBox(
@@ -549,7 +561,8 @@ fun ContainerEditSheetPreview() {
             isLandScape = false,
             onDeleteColor = {},
             bgMode = BgMode.IDLE,
-            onClickBgMode = {}
+            onClickBgMode = {},
+            index = 0
         )
     }
 }
