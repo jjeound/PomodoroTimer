@@ -1,6 +1,6 @@
 package com.pomodoro.timer.data.model
 
-import android.net.Uri
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import com.pomodoro.timer.R
@@ -9,11 +9,12 @@ import com.pomodoro.timer.ui.theme.Red
 import com.pomodoro.timer.ui.theme.White
 import com.pomodoro.timer.ui.theme.pretendard
 
+@Immutable
 data class CustomWidget(
     val id: Long = 0L,
     val fontFamily: FontFamily = pretendard,
     val fontSize: Float = 30f,
-    val backgroundImage: Uri? = null,
+    val backgroundImage: String? = null,
     val mode: Mode = Mode.POMODORO, // 0: 시계 형, 1: 디지털 형, 2: 탁상 형
     val hour: Int = 1,
     val minute: Int = 0,
