@@ -73,6 +73,9 @@ android {
     hilt {
         enableAggregatingTask = true
     }
+    composeCompiler {
+        reportsDestination = layout.buildDirectory.dir("compose_compiler")
+    }
 }
 
 ksp {
