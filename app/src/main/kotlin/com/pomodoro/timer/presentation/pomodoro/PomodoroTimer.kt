@@ -3,7 +3,6 @@ package com.pomodoro.timer.presentation.pomodoro
 import android.content.Context.VIBRATOR_MANAGER_SERVICE
 import android.content.Context.VIBRATOR_SERVICE
 import android.media.MediaPlayer
-import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -63,6 +62,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.pomodoro.timer.data.model.CustomWidget
@@ -341,7 +341,7 @@ fun Timer(
     bgColor: Color,
     handColor: Color,
     edgeColor: Color,
-    image: Uri?,
+    image: String?,
     remainingTime: Int = 0,
     editMode: Boolean,
     onEditText: () -> Unit = {},
@@ -398,7 +398,7 @@ fun Timer(
             ) {
                 AsyncImage(
                     modifier = Modifier.size(radiusForCircle * 2),
-                    model = image,
+                    model = image.toUri(),
                     contentDescription = "Image",
                     contentScale = ContentScale.Crop,
                 )
