@@ -13,6 +13,7 @@ import com.pomodoro.timer.data.MainRepository
 import com.pomodoro.timer.data.model.Mode
 import com.pomodoro.timer.ui.theme.Black
 import com.pomodoro.timer.ui.theme.White
+import com.pomodoro.timer.ui.theme.mountainsOfChristmas
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,17 +67,34 @@ class MainViewModel @Inject constructor(
                 }
             ).collect {
                 if (it.isEmpty()){
+                    val customWidgets = listOf(
+                        CustomWidget(
+                            fontFamily = mountainsOfChristmas,
+                            fontSize = 38f,
+                            fontColor = Color(0xFFB91C1C),
+                            fgColor = Color(0xFFF55454),
+                            handColor = Color(0xFFB91C1C),
+                            edgeColor = Color(0xFFDC2626),
+                        )
+                    )
                     if(isSystemInDarkTheme != null){
                         if(isSystemInDarkTheme) {
-                            _widgets.value = listOf(CustomWidget(
+                            _widgets.value = customWidgets + listOf(
+                            CustomWidget(
+                                screenColor = Black,
                                 fontColor = White,
                                 edgeColor = White,
                                 bgColor = Black
                             ))
                         } else {
-                            _widgets.value = listOf(CustomWidget())
+                            _widgets.value = customWidgets + listOf(CustomWidget())
                         }
-                    } else _widgets.value = listOf(CustomWidget())
+                    } else {
+                        _widgets.value = customWidgets + listOf(CustomWidget())
+                    }
+                    _widgets.value.forEach { widget ->
+                        saveWidget(widget)
+                    }
                 } else {
                     _widgets.value = it
                 }
@@ -86,6 +104,7 @@ class MainViewModel @Inject constructor(
                 _currentWidget.value = _widgetsByMode.value.first()
                 _editingWidgets.value = _widgetsByMode.value
                 _editingWidget.value = _currentWidget.value
+                Log.d("widget", _currentWidget.value.toString())
             }
         }
     }
