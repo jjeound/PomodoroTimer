@@ -106,18 +106,25 @@ fun ColorPicker(
                         2 -> {
                             editWidget(
                                 editingWidget.copy(
-                                    handColor = focusedColor
+                                    screenColor = focusedColor
                                 )
                             )
                         }
                         3 -> {
                             editWidget(
                                 editingWidget.copy(
-                                    edgeColor = focusedColor
+                                    handColor = focusedColor
                                 )
                             )
                         }
                         4 -> {
+                            editWidget(
+                                editingWidget.copy(
+                                    edgeColor = focusedColor
+                                )
+                            )
+                        }
+                        5 -> {
                             editWidget(
                                 editingWidget.copy(
                                     fontColor = focusedColor
