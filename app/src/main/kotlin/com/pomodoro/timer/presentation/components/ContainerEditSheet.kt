@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -64,6 +63,7 @@ fun ContainerEditSheet(
     onDismissRequest: () -> Unit,
     onColorClick: (Color) -> Unit,
     onBackgroundColorClick: (Color) -> Unit,
+    onScreenColorClick: (Color) -> Unit,
     onAddImage: (String) -> Unit,
     onAddBtnClick: (index: Int) -> Unit,
     onColorPickerClick: (index: Int) -> Unit,
@@ -83,23 +83,22 @@ fun ContainerEditSheet(
     )
     val pagerState = rememberPagerState(
         initialPage = index,
-        pageCount = { 5 }
+        pageCount = { 6 }
     )
-    val albumLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val uri = result.data?.data
-                uri?.let {
-                    // ⭐ 영구 권한 획득
-                    val flags = result.data!!.flags and
-                            (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-
-                    context.contentResolver.takePersistableUriPermission(it, flags)
-
-                    onAddImage(it.toString())
+    val albumLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val uri = result.data?.data
+            uri?.let {
+                val flags = result.data?.flags?.and((Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION))
+                flags?.let {
+                    context.contentResolver.takePersistableUriPermission(uri, it)
                 }
+                onAddImage(uri.toString())
             }
         }
+    }
     val imageAlbumIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
         type = "image/*"
         putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false)
@@ -152,6 +151,7 @@ fun ContainerEditSheet(
                 currentColor = currentColor,
                 onColorClick = onColorClick,
                 onBackgroundColorClick = onBackgroundColorClick,
+                onScreenColorClick = onScreenColorClick,
                 onHandColorClick = onHandColorClick,
                 onEdgeColorClick = onEdgeColorClick,
                 onAddBtnClick = onAddBtnClick,
@@ -181,6 +181,7 @@ fun ContainerEditSheet(
                 currentColor = currentColor,
                 onColorClick = onColorClick,
                 onBackgroundColorClick = onBackgroundColorClick,
+                onScreenColorClick = onScreenColorClick,
                 onHandColorClick = onHandColorClick,
                 onEdgeColorClick = onEdgeColorClick,
                 onAddBtnClick = onAddBtnClick,
@@ -208,6 +209,7 @@ fun ContainerEditSheetContent(
     currentColor: Color,
     onColorClick: (Color) -> Unit,
     onBackgroundColorClick: (Color) -> Unit,
+    onScreenColorClick: (Color) -> Unit,
     onHandColorClick: (Color) -> Unit,
     onEdgeColorClick: (Color) -> Unit,
     onAddBtnClick: (index: Int) -> Unit,
@@ -267,10 +269,10 @@ fun ContainerEditSheetContent(
                 }
                 2 -> {
                     ColorEditForm(
-                        title = R.string.hand_color,
+                        title = R.string.screen_color,
                         colors = colors,
                         onColorClick = {
-                            onHandColorClick(it)
+                            onScreenColorClick(it)
                         },
                         onColorPickerClick = {
                             onColorPickerClick(2)
@@ -284,10 +286,10 @@ fun ContainerEditSheetContent(
                 }
                 3 -> {
                     ColorEditForm(
-                        title = R.string.edge_color,
+                        title = R.string.hand_color,
                         colors = colors,
                         onColorClick = {
-                            onEdgeColorClick(it)
+                            onHandColorClick(it)
                         },
                         onColorPickerClick = {
                             onColorPickerClick(3)
@@ -300,6 +302,23 @@ fun ContainerEditSheetContent(
                     )
                 }
                 4 -> {
+                    ColorEditForm(
+                        title = R.string.edge_color,
+                        colors = colors,
+                        onColorClick = {
+                            onEdgeColorClick(it)
+                        },
+                        onColorPickerClick = {
+                            onColorPickerClick(4)
+                        },
+                        onAddBtnClick = {
+                            onAddBtnClick(4)
+                        },
+                        currentColor = currentColor,
+                        onDeleteColor = onDeleteColor,
+                    )
+                }
+                5 -> {
                     BgEditBox(
                         bgMode = bgMode,
                         onClickBgMode = onClickBgMode
@@ -312,7 +331,7 @@ fun ContainerEditSheetContent(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            repeat(5) { index ->
+            repeat(6) { index ->
                 val isFocused = pagerState.currentPage == index
                 Box(
                     modifier = Modifier
@@ -543,6 +562,7 @@ fun ContainerEditSheetPreview() {
             onDismissRequest = {},
             onColorClick = {},
             onBackgroundColorClick = {},
+            onScreenColorClick = {},
             onAddBtnClick = {},
             onAddImage = {},
             onColorPickerClick = {},
