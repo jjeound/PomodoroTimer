@@ -32,6 +32,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
@@ -172,7 +174,11 @@ fun MainScreenContent(
         iterations = LottieConstants.IterateForever
     )
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().background(
+            Brush.linearGradient(
+                colors = if(editMode) generateColorVariants(editingWidget.screenColor) else generateColorVariants(currentWidget.screenColor), start = Offset.Zero, end = Offset.Infinite
+            )
+        ),
     ) {
         if(!editMode && isLandscape && currentWidget.bgMode == BgMode.SNOW){
             LottieAnimation(
@@ -216,7 +222,6 @@ fun MainScreenContent(
                         ),
                     state = pagerState,
                     userScrollEnabled = editMode && pagerEnabled,
-                    key = { index -> widgets[index].id }
                 ) {
                     LaunchedEffect(pagerState) {
                         snapshotFlow { pagerState.currentPage }
@@ -239,7 +244,9 @@ fun MainScreenContent(
                         showButtons = showButtons,
                         onDeleteWidget = onDeleteWidget,
                         showDelete = showDelete,
-                        onShowDeleteChange = { showDelete = it },
+                        onShowDeleteChange = {
+                            showDelete = it
+                        },
                         pagerEnabled = pagerEnabled,
                         isLandscape = isLandscape
                     )
@@ -270,6 +277,14 @@ fun MainScreenContent(
                                 editingWidget.copy(
                                     bgColor = color,
                                     backgroundImage = null
+                                )
+                            )
+                        },
+                        onScreenColorClick = { color ->
+                            currentColor = color
+                            editWidget(
+                                editingWidget.copy(
+                                    screenColor = color
                                 )
                             )
                         },
@@ -448,18 +463,25 @@ fun MainScreenContent(
                                 2 -> {
                                     editWidget(
                                         editingWidget.copy(
-                                            handColor = currentWidget.handColor
+                                            screenColor = currentWidget.screenColor
                                         )
                                     )
                                 }
                                 3 -> {
                                     editWidget(
                                         editingWidget.copy(
-                                            edgeColor = currentWidget.edgeColor
+                                            handColor = currentWidget.handColor
                                         )
                                     )
                                 }
                                 4 -> {
+                                    editWidget(
+                                        editingWidget.copy(
+                                            edgeColor = currentWidget.edgeColor
+                                        )
+                                    )
+                                }
+                                5 -> {
                                     editWidget(
                                         editingWidget.copy(
                                             fontColor = currentWidget.fontColor
@@ -467,7 +489,7 @@ fun MainScreenContent(
                                     )
                                 }
                             }
-                            if( colorPickerOption == 4){
+                            if( colorPickerOption == 5){
                                 showTextEditBottomSheet = true
                             } else {
                                 showContainerEditBottomSheet = true
@@ -477,7 +499,7 @@ fun MainScreenContent(
                             onAddNewColor(color)
                             currentColor = color
                             showColorPicker = false
-                            if( colorPickerOption == 4){
+                            if( colorPickerOption == 5){
                                 showTextEditBottomSheet = true
                             } else {
                                 showContainerEditBottomSheet = true
@@ -503,7 +525,6 @@ fun MainScreenContent(
                     .align(Alignment.Center),
                 state = pagerState,
                 userScrollEnabled = editMode && pagerEnabled,
-                key = { index -> widgets[index].id }
             ) {
                 LaunchedEffect(pagerState) {
                     snapshotFlow { pagerState.currentPage }
@@ -549,6 +570,14 @@ fun MainScreenContent(
                             editingWidget.copy(
                                 bgColor = color,
                                 backgroundImage = null
+                            )
+                        )
+                    },
+                    onScreenColorClick = { color ->
+                        currentColor = color
+                        editWidget(
+                            editingWidget.copy(
+                                screenColor = color
                             )
                         )
                     },
@@ -730,18 +759,25 @@ fun MainScreenContent(
                             2 -> {
                                 editWidget(
                                     editingWidget.copy(
-                                        handColor = currentWidget.handColor
+                                        screenColor = currentWidget.screenColor
                                     )
                                 )
                             }
                             3 -> {
                                 editWidget(
                                     editingWidget.copy(
-                                        edgeColor = currentWidget.edgeColor
+                                        handColor = currentWidget.handColor
                                     )
                                 )
                             }
                             4 -> {
+                                editWidget(
+                                    editingWidget.copy(
+                                        edgeColor = currentWidget.edgeColor
+                                    )
+                                )
+                            }
+                            5 -> {
                                 editWidget(
                                     editingWidget.copy(
                                         fontColor = currentWidget.fontColor
@@ -749,7 +785,7 @@ fun MainScreenContent(
                                 )
                             }
                         }
-                        if( colorPickerOption == 4){
+                        if( colorPickerOption == 5){
                             showTextEditBottomSheet = true
                         } else {
                             showContainerEditBottomSheet = true
@@ -763,7 +799,7 @@ fun MainScreenContent(
                         }
                         currentColor = color
                         showColorPicker = false
-                        if( colorPickerOption == 4){
+                        if( colorPickerOption == 5){
                             showTextEditBottomSheet = true
                         } else {
                             showContainerEditBottomSheet = true
@@ -824,6 +860,31 @@ fun MainScreenContent(
     }
 }
 
+fun generateColorVariants(base: Color): List<Color> {
+
+    if (base == Color.White) {
+        return listOf(
+            Color(0xFFFEF2F2),
+            Color(0xFFFFFFFF),
+            Color(0xFFF0FDF4)
+        )
+    }
+
+    fun adjust(color: Color, factor: Float): Color {
+        return Color(
+            red = (color.red * factor).coerceIn(0f, 1f),
+            green = (color.green * factor).coerceIn(0f, 1f),
+            blue = (color.blue * factor).coerceIn(0f, 1f),
+            alpha = color.alpha
+        )
+    }
+
+    return listOf(
+        adjust(base, 0.9f),  // 살짝 어둡게
+        base,                 // 그대로
+        adjust(base, 1.5f)   // 살짝 밝게
+    )
+}
 
 @Preview(device = TABLET)
 @Composable
