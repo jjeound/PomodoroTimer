@@ -26,6 +26,7 @@ data class CustomWidgetEntity(
     val breakTimeSound: Int,
     val soundMode: SoundMode,
     val repeat: Int,
+    val screenColor: Color,
     val fgColor: Color,
     val bgColor: Color,
     val handColor: Color,

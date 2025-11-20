@@ -110,6 +110,7 @@ class MainRepositoryImpl @Inject constructor(
             entity.breakTimeSound,
             entity.soundMode,
             entity.repeat,
+            entity.screenColor,
             entity.fgColor,
             entity.bgColor,
             entity.handColor,

@@ -26,6 +26,7 @@ data class CustomWidget(
     val soundMode: SoundMode = SoundMode.NO_SOUND,
     val repeat: Int = 1,
     val fontColor: Color = Black,
+    val screenColor: Color = White,
     val fgColor: Color = Red,
     val bgColor: Color = White,
     val handColor: Color = Black,

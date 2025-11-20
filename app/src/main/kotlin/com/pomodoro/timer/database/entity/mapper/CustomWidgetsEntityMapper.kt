@@ -1,6 +1,5 @@
 package com.pomodoro.timer.database.entity.mapper
 
-import androidx.core.net.toUri
 import com.pomodoro.timer.data.model.CustomWidget
 import com.pomodoro.timer.database.entity.CustomWidgetEntity
 
@@ -24,6 +23,7 @@ object CustomWidgetsEntityMapper : EntityMapper<List<CustomWidget>, List<CustomW
         breakTimeSound = domain.breakTimeSound,
         soundMode = domain.soundMode,
         repeat = domain.repeat,
+        screenColor = domain.screenColor,
         fgColor = domain.fgColor,
         bgColor = domain.bgColor,
         handColor = domain.handColor,
@@ -51,6 +51,7 @@ object CustomWidgetsEntityMapper : EntityMapper<List<CustomWidget>, List<CustomW
         breakTimeSound = entity.breakTimeSound,
         soundMode = entity.soundMode,
         repeat = entity.repeat,
+        screenColor = entity.screenColor,
         fgColor = entity.fgColor,
         bgColor = entity.bgColor,
         handColor = entity.handColor,
