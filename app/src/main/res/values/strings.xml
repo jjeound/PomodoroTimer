@@ -36,4 +36,6 @@
     <string name="idle">IDLE</string>
     <string name="snow">SNOW</string>
     <string name="onboarding_title_2">Double tap to hide buttons</string>
+    <string name="screen_color">Screen Color</string>
+    <string name="widget_delete_alert">you can\'t delete default widgets</string>
 </resources>
