@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -222,6 +223,7 @@ fun PomodoroTimerContent(
     isLandscape: Boolean,
 ){
     val windowInfo = LocalWindowInfo.current
+    val context = LocalContext.current
     val screenSize = with(LocalDensity.current) {
         DpSize(
             width = windowInfo.containerSize.width.toDp(),
@@ -235,6 +237,7 @@ fun PomodoroTimerContent(
         animationSpec = tween(durationMillis = 200),
         label = "offsetYAnim"
     )
+    val text = stringResource(R.string.widget_delete_alert)
     Box(
         modifier = modifier.offset(y = animatedOffsetY.dp).then(
             if(editMode && pagerEnabled){
@@ -242,7 +245,11 @@ fun PomodoroTimerContent(
                     detectVerticalDragGestures(
                         onDragEnd = {
                             if (offsetY < -150f) {
-                                onShowDeleteChange(true)
+                                if(widget.id < 3){
+                                    Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+                                } else {
+                                    onShowDeleteChange(true)
+                                }
                             }
                             offsetY = 0f
                         },
@@ -353,8 +360,8 @@ fun Timer(
         contentAlignment = Alignment.Center
     ) {
         val angleStepForDot = 360f / 60
-        val radiusForDot = radius * 0.78f
-        val radiusForCircle = radius * 0.75f
+        val radiusForDot = radius * 0.80f
+        val radiusForCircle = radius * 0.77f
         repeat(60){ idx ->
             val angle = angleStepForDot * idx
             Box(
@@ -365,29 +372,16 @@ fun Timer(
                         translationY = with(context) {radiusForDot.toPx() * sin(Math.toRadians(angle.toDouble())).toFloat()}
                     }
             ) {
-                if(idx % 5 == 0){
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.long_dot),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .width(4.dp)
-                            .graphicsLayer{
-                                rotationZ = angle + 90f
-                            },
-                        tint = edgeColor
-                    )
-                } else {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.short_dot),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .width(4.dp)
-                            .graphicsLayer{
-                                rotationZ = angle + 90f
-                            },
-                        tint = edgeColor
-                    )
-                }
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.long_dot),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .width(2.dp)
+                        .graphicsLayer{
+                            rotationZ = angle + 90f
+                        },
+                    tint = edgeColor
+                )
             }
         }
         val sweepAngle = (remainingTime / 3600f) * 360f
@@ -432,7 +426,7 @@ fun Timer(
             tint = handColor
         )
         val angleStep = 360f / text.size
-        val radiusForTime = radius * 0.95f
+        val radiusForTime = radius * 0.97f
         text.forEachIndexed { index, str ->
             val angle = angleStep * index
             Box(
