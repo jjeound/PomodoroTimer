@@ -12,19 +12,24 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
@@ -43,8 +48,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -71,6 +78,7 @@ import com.pomodoro.timer.R
 import com.pomodoro.timer.data.model.SoundMode
 import com.pomodoro.timer.ui.theme.CustomTheme
 import com.pomodoro.timer.ui.theme.MyTheme
+import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -87,6 +95,7 @@ fun PomodoroTimer(
     onShowDeleteChange: (Boolean) -> Unit,
     pagerEnabled: Boolean,
     isLandscape: Boolean,
+    patterns: List<Int>,
     viewModel: PomodoroViewModel = hiltViewModel()
 ){
     viewModel.setRP(widget.repeat)
@@ -197,7 +206,8 @@ fun PomodoroTimer(
         showDelete = showDelete,
         onShowDeleteChange = onShowDeleteChange,
         pagerEnabled = pagerEnabled,
-        isLandscape = isLandscape
+        isLandscape = isLandscape,
+        patterns = patterns,
     )
 }
 
@@ -221,6 +231,7 @@ fun PomodoroTimerContent(
     onShowDeleteChange: (Boolean) -> Unit = {},
     pagerEnabled: Boolean = false,
     isLandscape: Boolean,
+    patterns: List<Int>,
 ){
     val windowInfo = LocalWindowInfo.current
     val context = LocalContext.current
@@ -287,6 +298,8 @@ fun PomodoroTimerContent(
                 handColor = widget.handColor,
                 edgeColor = widget.edgeColor,
                 image = widget.backgroundImage,
+                pattern = widget.pattern,
+                patterns = patterns,
                 remainingTime = remainingTime,
                 editMode = editMode,
                 onEditText = onEditText,
@@ -348,6 +361,8 @@ fun Timer(
     bgColor: Color,
     handColor: Color,
     edgeColor: Color,
+    pattern: Int,
+    patterns: List<Int>,
     image: String?,
     remainingTime: Int = 0,
     editMode: Boolean,
@@ -413,15 +428,18 @@ fun Timer(
             drawArc(
                 color = color,
                 startAngle = -90f,
-                sweepAngle = if(editMode) -270f else sweepAngle,
+                sweepAngle = if(editMode) 270f else sweepAngle,
                 useCenter = true,
             )
+        }
+        if(pattern != 0){
+            IconGridWithArcClip(radiusForCircle, editMode, patterns[pattern])
         }
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.handle),
             contentDescription = null,
             modifier = Modifier.align(Alignment.Center).rotate(
-                if(editMode) 0f else sweepAngle
+                if(editMode) -90f else sweepAngle
             ),
             tint = handColor
         )
@@ -540,6 +558,61 @@ fun TimerButtons(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun IconGridWithArcClip(
+    radiusForCircle: Dp,
+    editMode: Boolean,
+    pattern: Int,
+) {
+    val circleRadiusPx = with(LocalDensity.current) { radiusForCircle.toPx() }
+    Box(
+        modifier = Modifier
+            .size(radiusForCircle * 2)
+            .clip(CircleShape)
+    ) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(5),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(8.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            items(45) { index ->
+
+                // 각 아이콘의 좌표 계산
+                val col = index % 5
+                val row = index / 5
+
+                val gridWidth = circleRadiusPx * 2
+                val cellSize = gridWidth / 5f
+
+                val cx = col * cellSize + cellSize / 2f
+                val cy = row * cellSize + cellSize / 2f
+
+                // 중심 기준 좌표
+                val dx = cx - circleRadiusPx
+                val dy = cy - circleRadiusPx
+
+                // dy는 아래로 증가하기 때문에 반전 필요
+                val angle = Math.toDegrees(atan2(-dy, dx).toDouble()).let {
+                    if (it < 0) it + 360 else it
+                }
+
+                val isInHiddenArea = angle in 90.0..180.0  // ⬅ 왼쪽 위 부분
+
+                if (!(editMode && isInHiddenArea)) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(pattern),
+                        contentDescription = null,
+                        tint = Color.Unspecified
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Preview()
 @Composable
 fun PomodoroTimerContentPreview() {
@@ -549,7 +622,8 @@ fun PomodoroTimerContentPreview() {
             minutesTxt = listOf("15", "20", "25", "30", "35", "40", "45", "50", "55", "0", "5", "10"),
             editMode = true,
             onDeleteWidget = {},
-            isLandscape = false
+            isLandscape = false,
+            patterns = emptyList()
         )
     }
 }

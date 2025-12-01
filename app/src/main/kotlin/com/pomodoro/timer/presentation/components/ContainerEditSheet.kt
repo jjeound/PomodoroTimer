@@ -30,6 +30,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
@@ -75,6 +76,9 @@ fun ContainerEditSheet(
     isLandScape: Boolean,
     onClickBgMode: (BgMode) -> Unit,
     bgMode: BgMode,
+    onPatternClick: (Int) -> Unit,
+    currentPattern: Int,
+    patterns: List<Int>,
     index: Int,
 ) {
     val context = LocalContext.current
@@ -166,6 +170,9 @@ fun ContainerEditSheet(
                 onDeleteColor = onDeleteColor,
                 bgMode = bgMode,
                 onClickBgMode = onClickBgMode,
+                onPatternClick = onPatternClick,
+                currentPattern = currentPattern,
+                patterns = patterns,
             )
         }
     } else {
@@ -196,6 +203,9 @@ fun ContainerEditSheet(
                 onDeleteColor = onDeleteColor,
                 bgMode = bgMode,
                 onClickBgMode = onClickBgMode,
+                onPatternClick = onPatternClick,
+                currentPattern = currentPattern,
+                patterns = patterns
             )
         }
     }
@@ -218,6 +228,9 @@ fun ContainerEditSheetContent(
     onDeleteColor: (Color) -> Unit,
     bgMode: BgMode,
     onClickBgMode: (BgMode) -> Unit,
+    onPatternClick: (Int) -> Unit,
+    currentPattern: Int,
+    patterns: List<Int>,
 ){
     Column(
         modifier = Modifier.wrapContentHeight().fillMaxWidth().padding(vertical = 10.dp),
@@ -244,6 +257,17 @@ fun ContainerEditSheetContent(
                         },
                         currentColor = currentColor,
                         onDeleteColor = onDeleteColor,
+                        second = {
+                            HorizontalDivider(
+                                thickness = 1.dp,
+                                color = CustomTheme.colors.divider
+                            )
+                            PatternForm(
+                                onPatternClick = onPatternClick,
+                                currentPattern = currentPattern,
+                                patterns = patterns
+                            )
+                        }
                     )
                 }
                 1 -> {
@@ -261,11 +285,12 @@ fun ContainerEditSheetContent(
                         },
                         currentColor = currentColor,
                         onDeleteColor = onDeleteColor,
-                    ){
-                        ImagePicker(
-                            onClick = onImagePickerClick
-                        )
-                    }
+                        content = {
+                            ImagePicker(
+                                onClick = onImagePickerClick
+                            )
+                        }
+                    )
                 }
                 2 -> {
                     ColorEditForm(
@@ -358,6 +383,7 @@ fun ColorEditForm(
     currentColor: Color,
     onDeleteColor: (Color) -> Unit,
     content: (@Composable () -> Unit)? = null,
+    second: (@Composable () -> Unit)? = null,
 ){
     val state = rememberLazyListState()
     val context = LocalContext.current
@@ -445,6 +471,7 @@ fun ColorEditForm(
                 content?.invoke()
             }
         }
+        second?.invoke()
     }
 }
 
@@ -549,8 +576,76 @@ fun AddColorBox(
 }
 
 
+@Composable
+fun PatternForm(
+    onPatternClick: (Int) -> Unit,
+    currentPattern: Int,
+    patterns: List<Int>
+){
+    val state = rememberLazyListState()
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.pattern),
+            style = CustomTheme.typography.editTitleSmall,
+            color = CustomTheme.colors.text,
+        )
+        LazyRow(
+            state = state,
+            modifier = Modifier
+                .wrapContentWidth()
+                .padding(vertical = 4.dp, horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            items(
+                patterns.size,
+            ) { index ->
+                val pattern = patterns[index]
+                PatternBox(
+                    pattern = pattern,
+                    onClick = { onPatternClick(index) },
+                    clicked = currentPattern == pattern
+                )
+            }
+        }
+    }
+}
 
-
+@Composable
+fun PatternBox(
+    pattern: Int,
+    onClick: () -> Unit,
+    clicked: Boolean,
+){
+    Box(
+        modifier = Modifier
+            .size(30.dp)
+            .clip(CircleShape)
+            .background(CustomTheme.colors.indicatorBox)
+            .clickable(
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center,
+    ){
+        Icon(
+            imageVector = ImageVector.vectorResource(pattern),
+            contentDescription = null,
+            tint = Color.Unspecified
+        )
+        if(clicked){
+            Box(
+                modifier = Modifier.size(22.dp).border(
+                    width = 2.dp,
+                    color = CustomTheme.colors.selectorContainerSelected,
+                    shape = CircleShape
+                ),
+            )
+        }
+    }
+}
 
 
 @Preview
@@ -582,6 +677,9 @@ fun ContainerEditSheetPreview() {
             onDeleteColor = {},
             bgMode = BgMode.IDLE,
             onClickBgMode = {},
+            onPatternClick = {},
+            currentPattern = 0,
+            patterns = emptyList(),
             index = 0
         )
     }
