@@ -6,14 +6,16 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -77,12 +79,6 @@ fun MainScreen(
     val showButtons = viewModel.showButtons
     val config = LocalConfiguration.current
     val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val isSystemDarkTheme = isSystemInDarkTheme()
-    LaunchedEffect(true) {
-        viewModel.getWidgets(
-            isSystemInDarkTheme = isSystemDarkTheme
-        )
-    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -98,9 +94,7 @@ fun MainScreen(
                 editWidget = viewModel::editWidget,
                 onCancelEdit = viewModel::onCancelEdit,
                 onDoneEdit = viewModel::onDoneEdit,
-                onAddNewWidget = {
-                    viewModel.onAddNewWidget(isSystemDarkTheme)
-                },
+                onAddNewWidget = viewModel::onAddNewWidget,
                 onNextWidget = viewModel::onNextWidget,
                 onAddNewColor = viewModel::saveColor,
                 onUpdateColor = viewModel::updateColor,
@@ -160,6 +154,15 @@ fun MainScreenContent(
     var showDelete by remember { mutableStateOf(false) }
     var containerEditPagerIndex by remember { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
+    val patterns = listOf(
+        R.drawable.none,
+        R.drawable.snowflake,
+        R.drawable.tree,
+        R.drawable.holly,
+        R.drawable.star,
+        R.drawable.candy,
+        R.drawable.gift
+    )
     LaunchedEffect(widgets.size) {
         if(widgets.isNotEmpty() && editMode) pagerState.animateScrollToPage(widgets.lastIndex)
     }
@@ -248,7 +251,8 @@ fun MainScreenContent(
                             showDelete = it
                         },
                         pagerEnabled = pagerEnabled,
-                        isLandscape = isLandscape
+                        isLandscape = isLandscape,
+                        patterns = patterns
                     )
                 }
                 if (showContainerEditBottomSheet || showTextEditBottomSheet || showColorPicker) {
@@ -337,6 +341,15 @@ fun MainScreenContent(
                                 )
                             )
                         },
+                        onPatternClick = {
+                            editWidget(
+                                editingWidget.copy(
+                                    pattern = it
+                                )
+                            )
+                        },
+                        currentPattern = editingWidget.pattern,
+                        patterns = patterns,
                         index = containerEditPagerIndex
                     )
                 }
@@ -547,7 +560,8 @@ fun MainScreenContent(
                     showDelete = showDelete,
                     onShowDeleteChange = { showDelete = it },
                     pagerEnabled = pagerEnabled,
-                    isLandscape = isLandscape
+                    isLandscape = isLandscape,
+                    patterns = patterns
                 )
             }
             if(showContainerEditBottomSheet){
@@ -631,6 +645,15 @@ fun MainScreenContent(
                             )
                         )
                     },
+                    onPatternClick = {
+                        editWidget(
+                            editingWidget.copy(
+                                pattern = it
+                            )
+                        )
+                    },
+                    currentPattern = editingWidget.pattern,
+                    patterns = patterns,
                     index = containerEditPagerIndex
                 )
             }

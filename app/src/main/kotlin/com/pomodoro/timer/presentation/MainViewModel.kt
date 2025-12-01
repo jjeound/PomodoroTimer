@@ -55,9 +55,10 @@ class MainViewModel @Inject constructor(
 
     init {
         getColors()
+        getWidgets()
     }
 
-    fun getWidgets(isSystemInDarkTheme: Boolean? = null){
+    fun getWidgets(){
         viewModelScope.launch {
             repository.getAllCustomWidgets(
                 onStart = { uiState.value = MainUiState.Loading },
@@ -67,31 +68,14 @@ class MainViewModel @Inject constructor(
                 }
             ).collect {
                 if (it.isEmpty()){
-                    val customWidgets = listOf(
-                        CustomWidget(
-                            fontFamily = mountainsOfChristmas,
-                            fontSize = 38f,
-                            fontColor = Color(0xFFB91C1C),
-                            fgColor = Color(0xFFF55454),
-                            handColor = Color(0xFFB91C1C),
-                            edgeColor = Color(0xFFDC2626),
-                        )
-                    )
-                    if(isSystemInDarkTheme != null){
-                        if(isSystemInDarkTheme) {
-                            _widgets.value = customWidgets + listOf(
-                            CustomWidget(
-                                screenColor = Black,
-                                fontColor = White,
-                                edgeColor = White,
-                                bgColor = Black
-                            ))
-                        } else {
-                            _widgets.value = customWidgets + listOf(CustomWidget())
-                        }
-                    } else {
-                        _widgets.value = customWidgets + listOf(CustomWidget())
-                    }
+                    _widgets.value = listOf(CustomWidget(), CustomWidget(
+                        fontFamily = mountainsOfChristmas,
+                        fontSize = 38f,
+                        fontColor = Color(0xFFB91C1C),
+                        fgColor = Color(0xFFF55454),
+                        handColor = Color(0xFFB91C1C),
+                        edgeColor = Color(0xFFDC2626),
+                    ))
                     _widgets.value.forEach { widget ->
                         saveWidget(widget)
                     }
@@ -104,7 +88,6 @@ class MainViewModel @Inject constructor(
                 _currentWidget.value = _widgetsByMode.value.first()
                 _editingWidgets.value = _widgetsByMode.value
                 _editingWidget.value = _currentWidget.value
-                Log.d("widget", _currentWidget.value.toString())
             }
         }
     }
@@ -126,19 +109,10 @@ class MainViewModel @Inject constructor(
         else saveWidget(_editingWidget.value!!)
     }
 
-    fun onAddNewWidget(isSystemInDarkTheme: Boolean){
-        if(isSystemInDarkTheme){
-            _editingWidgets.value += CustomWidget(
-                mode = this.mode,
-                fontColor = White,
-                edgeColor = White,
-                bgColor = Black
-            )
-        } else {
-            _editingWidgets.value += CustomWidget(
-                mode = this.mode
-            )
-        }
+    fun onAddNewWidget(){
+        _editingWidgets.value += CustomWidget(
+            mode = this.mode
+        )
         _editingWidget.value = _editingWidgets.value.last()
     }
 
