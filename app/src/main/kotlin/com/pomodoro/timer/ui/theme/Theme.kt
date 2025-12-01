@@ -1,7 +1,6 @@
 package com.pomodoro.timer.ui.theme
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.RippleConfiguration
@@ -24,12 +23,7 @@ val LocalCustomTypography = staticCompositionLocalOf {
 
 @Composable
 fun MyTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    colors: CustomColors = if (darkTheme) {
-        DarkCustomColors
-    } else {
-        LightCustomColors
-    },
+    colors: CustomColors = LightCustomColors,
     background: BackgroundTheme = BackgroundTheme(
         color = colors.surface,
         tonalElevation = 2.dp,
