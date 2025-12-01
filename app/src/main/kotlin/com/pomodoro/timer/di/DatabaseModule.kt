@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.pomodoro.timer.database.ColorDao
 import com.pomodoro.timer.database.typeConverter.ColorTypeConverter
 import com.pomodoro.timer.database.CustomWidgetDao
+import com.pomodoro.timer.database.MIGRATION_4_5
 import com.pomodoro.timer.database.PomodoroDatabase
 import com.pomodoro.timer.database.typeConverter.BgModeTypeConverter
 import com.pomodoro.timer.database.typeConverter.ModeTypeConverter
@@ -38,6 +39,7 @@ object DatabaseModule {
             .addTypeConverter(modeTypeConverter)
             .addTypeConverter(soundModeTypeConverter)
             .addTypeConverter(bgModeTypeConverter)
+            .addMigrations(MIGRATION_4_5)
             .build()
     }
 
