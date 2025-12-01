@@ -115,7 +115,8 @@ class MainRepositoryImpl @Inject constructor(
             entity.bgColor,
             entity.handColor,
             entity.edgeColor,
-            entity.bgMode
+            entity.bgMode,
+            entity.pattern
         )
         emit(Unit)
     }.onStart {

@@ -31,5 +31,6 @@ data class CustomWidgetEntity(
     val bgColor: Color,
     val handColor: Color,
     val edgeColor: Color,
-    val bgMode: BgMode
+    val bgMode: BgMode,
+    val pattern: Int,
 )

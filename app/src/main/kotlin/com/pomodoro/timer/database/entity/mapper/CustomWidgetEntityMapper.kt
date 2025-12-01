@@ -27,7 +27,8 @@ object CustomWidgetEntityMapper : EntityMapper<CustomWidget, CustomWidgetEntity>
       bgColor = domain.bgColor,
       handColor = domain.handColor,
       edgeColor = domain.edgeColor,
-      bgMode = domain.bgMode
+      bgMode = domain.bgMode,
+        pattern = domain.pattern
     )
   }
 
@@ -53,7 +54,8 @@ object CustomWidgetEntityMapper : EntityMapper<CustomWidget, CustomWidgetEntity>
       bgColor = entity.bgColor,
       handColor = entity.handColor,
       edgeColor = entity.edgeColor,
-      bgMode = entity.bgMode
+      bgMode = entity.bgMode,
+        pattern = entity.pattern
     )
   }
 }

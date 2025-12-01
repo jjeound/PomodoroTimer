@@ -1,7 +1,6 @@
 package com.pomodoro.timer.database
 
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.room.Dao
 import androidx.room.Insert
@@ -48,7 +47,8 @@ interface CustomWidgetDao {
             bgColor = CASE WHEN :bgColor IS NOT NULL THEN :bgColor ELSE bgColor END,
             handColor = CASE WHEN :handColor IS NOT NULL THEN :handColor ELSE handColor END,
             edgeColor = CASE WHEN :edgeColor IS NOT NULL THEN :edgeColor ELSE edgeColor END,
-            bgMode = CASE WHEN :bgMode IS NOT NULL THEN :bgMode ELSE bgMode END
+            bgMode = CASE WHEN :bgMode IS NOT NULL THEN :bgMode ELSE bgMode END,
+            pattern = CASE WHEN :pattern IS NOT NULL THEN :pattern ELSE pattern END
         WHERE id = :id
     """)
     suspend fun updateCustomWidget(
@@ -72,6 +72,7 @@ interface CustomWidgetDao {
         bgColor: Color?,
         handColor: Color?,
         edgeColor: Color?,
-        bgMode: BgMode?
+        bgMode: BgMode?,
+        pattern: Int?
     )
 }

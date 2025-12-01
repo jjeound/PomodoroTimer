@@ -31,7 +31,8 @@ data class CustomWidget(
     val bgColor: Color = White,
     val handColor: Color = Black,
     val edgeColor: Color = Black,
-    val bgMode: BgMode = BgMode.IDLE
+    val bgMode: BgMode = BgMode.IDLE,
+    val pattern: Int = 0,
 )
 
 enum class Mode {
