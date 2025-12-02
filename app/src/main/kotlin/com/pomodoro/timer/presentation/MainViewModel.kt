@@ -11,8 +11,6 @@ import androidx.lifecycle.viewModelScope
 import com.pomodoro.timer.data.model.CustomWidget
 import com.pomodoro.timer.data.MainRepository
 import com.pomodoro.timer.data.model.Mode
-import com.pomodoro.timer.ui.theme.Black
-import com.pomodoro.timer.ui.theme.White
 import com.pomodoro.timer.ui.theme.mountainsOfChristmas
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
