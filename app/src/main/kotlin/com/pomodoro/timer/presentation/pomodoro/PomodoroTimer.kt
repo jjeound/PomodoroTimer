@@ -12,24 +12,19 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
@@ -48,13 +43,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -78,7 +77,6 @@ import com.pomodoro.timer.R
 import com.pomodoro.timer.data.model.SoundMode
 import com.pomodoro.timer.ui.theme.CustomTheme
 import com.pomodoro.timer.ui.theme.MyTheme
-import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -413,6 +411,7 @@ fun Timer(
                 )
             }
         }
+        val painter = rememberVectorPainter(ImageVector.vectorResource(patterns[pattern]))
         Canvas(
             modifier = Modifier.size(radiusForCircle * 2)
                 .clickable(
@@ -422,18 +421,67 @@ fun Timer(
                     interactionSource = remember { MutableInteractionSource() }
                 )
         ) {
+            val radius = radiusForCircle.toPx()
+            val center = Offset(size.width / 2f, size.height / 2f)
+            val start = -90f
+            val sweep = if (editMode) 270f else sweepAngle
             drawCircle(
                 color = bgColor
             )
             drawArc(
                 color = color,
-                startAngle = -90f,
-                sweepAngle = if(editMode) 270f else sweepAngle,
+                startAngle = start,
+                sweepAngle = sweep,
                 useCenter = true,
             )
-        }
-        if(pattern != 0){
-            IconGridWithArcClip(radiusForCircle, editMode, patterns[pattern])
+            val arcPath = Path().apply {
+                if (sweep == 360f) {
+                    addOval(Rect(
+                        center.x - radius,
+                        center.y - radius,
+                        center.x + radius,
+                        center.y + radius
+                    ))
+                } else {
+                    moveTo(center.x, center.y)
+                    arcTo(
+                        rect = Rect(
+                            center.x - radius,
+                            center.y - radius,
+                            center.x + radius,
+                            center.y + radius
+                        ),
+                        startAngleDegrees = start,
+                        sweepAngleDegrees = sweep,
+                        forceMoveTo = false
+                    )
+                    lineTo(center.x, center.y)
+                    close()
+                }
+            }
+            if(pattern != 0){
+                clipPath(arcPath) {
+                    val cellW = (radius * 2) / 7
+                    val cellH = (radius * 2) / 5
+                    for (i in 0 until 5) {
+                        for (j in 0 until 7) {
+
+                            val x = j * cellW
+                            val y = i * cellH
+
+                            // 3) 격자 위치로 painter 그리기
+                            with(painter) {
+                                translate(
+                                    left = x + (cellW - intrinsicSize.width) / 2f,
+                                    top = y + (cellH - intrinsicSize.height) / 2f
+                                ) {
+                                    draw(intrinsicSize)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.handle),
@@ -553,61 +601,6 @@ fun TimerButtons(
                     color = CustomTheme.colors.text,
                     style = CustomTheme.typography.buttonTimerSmall
                 )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun IconGridWithArcClip(
-    radiusForCircle: Dp,
-    editMode: Boolean,
-    pattern: Int,
-) {
-    val circleRadiusPx = with(LocalDensity.current) { radiusForCircle.toPx() }
-    Box(
-        modifier = Modifier
-            .size(radiusForCircle * 2)
-            .clip(CircleShape)
-    ) {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(5),
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(8.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            items(45) { index ->
-
-                // 각 아이콘의 좌표 계산
-                val col = index % 5
-                val row = index / 5
-
-                val gridWidth = circleRadiusPx * 2
-                val cellSize = gridWidth / 5f
-
-                val cx = col * cellSize + cellSize / 2f
-                val cy = row * cellSize + cellSize / 2f
-
-                // 중심 기준 좌표
-                val dx = cx - circleRadiusPx
-                val dy = cy - circleRadiusPx
-
-                // dy는 아래로 증가하기 때문에 반전 필요
-                val angle = Math.toDegrees(atan2(-dy, dx).toDouble()).let {
-                    if (it < 0) it + 360 else it
-                }
-
-                val isInHiddenArea = angle in 90.0..180.0  // ⬅ 왼쪽 위 부분
-
-                if (!(editMode && isInHiddenArea)) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(pattern),
-                        contentDescription = null,
-                        tint = Color.Unspecified
-                    )
-                }
             }
         }
     }
