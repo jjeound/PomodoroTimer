@@ -66,14 +66,14 @@ class MainViewModel @Inject constructor(
                 }
             ).collect {
                 if (it.isEmpty()){
-                    _widgets.value = listOf(CustomWidget(), CustomWidget(
+                    _widgets.value = listOf(CustomWidget(
                         fontFamily = mountainsOfChristmas,
                         fontSize = 38f,
                         fontColor = Color(0xFFB91C1C),
                         fgColor = Color(0xFFF55454),
                         handColor = Color(0xFFB91C1C),
                         edgeColor = Color(0xFFDC2626),
-                    ))
+                    ), CustomWidget())
                     _widgets.value.forEach { widget ->
                         saveWidget(widget)
                     }
