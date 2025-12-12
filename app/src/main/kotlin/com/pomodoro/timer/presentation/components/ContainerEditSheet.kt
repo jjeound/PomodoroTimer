@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -583,6 +584,7 @@ fun PatternForm(
     patterns: List<Int>
 ){
     val state = rememberLazyListState()
+    Log.d("pattern", currentPattern.toString())
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -607,7 +609,7 @@ fun PatternForm(
                 PatternBox(
                     pattern = pattern,
                     onClick = { onPatternClick(index) },
-                    clicked = currentPattern == pattern
+                    clicked = currentPattern == index
                 )
             }
         }
@@ -624,9 +626,21 @@ fun PatternBox(
         modifier = Modifier
             .size(30.dp)
             .clip(CircleShape)
-            .background(CustomTheme.colors.indicatorBox)
+            .background(
+                color = CustomTheme.colors.indicatorBox,
+                shape = CircleShape
+            )
             .clickable(
                 onClick = onClick
+            ).then(
+                if(clicked){
+                    Modifier.border(
+                        width = 2.dp, color = CustomTheme.colors.buttonBorder,
+                        shape = CircleShape
+                    )
+                } else {
+                    Modifier
+                }
             ),
         contentAlignment = Alignment.Center,
     ){
@@ -635,15 +649,6 @@ fun PatternBox(
             contentDescription = null,
             tint = Color.Unspecified
         )
-        if(clicked){
-            Box(
-                modifier = Modifier.size(22.dp).border(
-                    width = 2.dp,
-                    color = CustomTheme.colors.selectorContainerSelected,
-                    shape = CircleShape
-                ),
-            )
-        }
     }
 }
 
