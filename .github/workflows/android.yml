@@ -20,16 +20,17 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-# 1. 서명 키 및 환경 변수 설정 (빌드 전 수행)
-    - name: Decode Keystore
-      run: echo '${{ secrets.KEY_STORE }}' | base64 -d > ./app/upload-keystore.jks
+# # 1. 서명 키 및 환경 변수 설정 (빌드 전 수행)
+#     - name: Decode Keystore
+#       run: echo '${{ secrets.KEY_STORE }}' | base64 -d > ./app/upload-keystore.jks
 
     - name: Generate local.properties
       run: |
+        echo '${{ secrets.KEY_STORE }}' | base64 -d > ./app/upload-keystore.jks
+        echo "STORE_PATH=upload-keystore.jks" > ./local.properties
         echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> ./local.properties
         echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> ./local.properties
         echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> ./local.properties
-        echo "storeFile=upload-keystore.jks" >> ./local.properties
 
     - name: Create Google Services JSON
       run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > ./app/google-services.json
