@@ -2,9 +2,9 @@ name: Android CI
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "develop" ]
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -20,7 +20,35 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
+# 1. 서명 키 및 환경 변수 설정 (빌드 전 수행)
+    - name: Decode Keystore
+      run: echo '${{ secrets.KEY_STORE }}' | base64 -d > ./app/upload-keystore.jks
+
+    - name: Generate local.properties
+      run: |
+        echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> ./local.properties
+        echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> ./local.properties
+        echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> ./local.properties
+        echo "storeFile=upload-keystore.jks" >> ./local.properties
+
+    - name: Create Google Services JSON
+      run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > ./app/google-services.json
+
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew build
+
+    # 2. 플레이스토어용 AAB 빌드
+    - name: Build Release Bundle (AAB)
+      run: ./gradlew :app:bundleRelease
+
+    # 3. Google Play 업로드 (내부 테스트 트랙)
+    - name: Upload to Google Play
+      uses: r0adkll/upload-google-play@v1
+      with:
+        serviceAccountJsonRaw: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+        packageName: com.your.package.name # 본인의 패키지명으로 변경
+        releaseFiles: app/build/outputs/bundle/release/app-release.aab
+        track: internal # internal, alpha, beta, production 중 선택
+        status: completed
+
+
