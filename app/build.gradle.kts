@@ -30,7 +30,7 @@ android {
             localProperties.load(localPropertiesFile.inputStream())
         }
         create("release") {
-            storeFile = file(localProperties.getProperty("STORE_PATH") ?: "")
+            storeFile = file("upload-keystore.jks")
             storePassword  = localProperties.getProperty("STORE_PASSWORD") ?: ""
             keyAlias = localProperties.getProperty("KEY_ALIAS") ?: ""
             keyPassword = localProperties.getProperty("KEY_PASSWORD") ?: ""
