@@ -44,8 +44,8 @@ jobs:
     - name: Upload to Google Play
       uses: r0adkll/upload-google-play@v1
       with:
-        serviceAccountJsonRaw: ${{ secrets.SERVICE_ACCOUNT_JSON }}
-        packageName: com.your.package.name # 본인의 패키지명으로 변경
+        serviceAccountJsonRaw: ${{ secrets.GOOGLE_SERVICES_JSON}}
+        packageName: com.jje.timer
         releaseFiles: app/build/outputs/bundle/release/app-release.aab
         track: internal # internal, alpha, beta, production 중 선택
         status: completed
