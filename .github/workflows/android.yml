@@ -20,14 +20,12 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-# # 1. 서명 키 및 환경 변수 설정 (빌드 전 수행)
-#     - name: Decode Keystore
-#       run: echo '${{ secrets.KEY_STORE }}' | base64 -d > ./app/upload-keystore.jks
+# 1. 서명 키 및 환경 변수 설정 (빌드 전 수행)
+    - name: Decode Keystore
+      run: echo '${{ secrets.KEY_STORE }}' | base64 -d > ./app/upload-keystore.jks
 
     - name: Generate local.properties
       run: |
-        echo '${{ secrets.KEY_STORE }}' | base64 -d > ./app/upload-keystore.jks
-        echo "STORE_PATH=app/upload-keystore.jks" > ./local.properties
         echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> ./local.properties
         echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> ./local.properties
         echo "STORE_PASSWORD=${{ secrets.STORE_PASSWORD }}" >> ./local.properties
