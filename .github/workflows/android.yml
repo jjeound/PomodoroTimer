@@ -30,9 +30,6 @@ jobs:
         echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> ./local.properties
         echo "STORE_PASSWORD=${{ secrets.STORE_PASSWORD }}" >> ./local.properties
 
-    - name: Create Google Services JSON
-      run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > ./app/google-services.json
-
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
@@ -44,7 +41,7 @@ jobs:
     - name: Upload to Google Play
       uses: r0adkll/upload-google-play@v1
       with:
-        serviceAccountJsonRaw: ${{ secrets.GOOGLE_SERVICES_JSON}}
+        serviceAccountJsonPlainText: ${{ secrets.GOOGLE_SERVICES_JSON}}
         packageName: com.jje.timer
         releaseFiles: app/build/outputs/bundle/release/app-release.aab
         track: internal # internal, alpha, beta, production 중 선택
