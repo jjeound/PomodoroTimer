@@ -17,8 +17,9 @@ android {
         applicationId = "com.jje.timer"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "6.0"
+        val autoVersionCode = project.findProperty("versionCode")?.toString()?.toInt() ?: 6
+        versionCode = autoVersionCode
+        versionName = "1.0.${autoVersionCode}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
