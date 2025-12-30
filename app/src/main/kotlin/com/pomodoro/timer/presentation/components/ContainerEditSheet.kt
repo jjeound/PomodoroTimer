@@ -1,10 +1,7 @@
 package com.pomodoro.timer.presentation.components
 
-import android.Manifest
-import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -52,7 +49,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import com.pomodoro.timer.R
 import com.pomodoro.timer.data.model.BgMode
 import com.pomodoro.timer.ui.theme.CustomTheme
@@ -91,46 +87,21 @@ fun ContainerEditSheet(
         pageCount = { 6 }
     )
     val albumLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val uri = result.data?.data
-            uri?.let {
-                val flags = result.data?.flags?.and((Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION))
-                flags?.let {
-                    context.contentResolver.takePersistableUriPermission(uri, it)
-                }
-                onAddImage(uri.toString())
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            val contentResolver = context.contentResolver
+            val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            try {
+                contentResolver.takePersistableUriPermission(it, takeFlags)
+                onAddImage(it.toString())
+            } catch (e: SecurityException) {
+                e.printStackTrace()
             }
         }
     }
-    val imageAlbumIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
-        type = "image/*"
-        putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false)
-        addCategory(Intent.CATEGORY_OPENABLE)
-    }
 
-    val galleryPermissions = when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> arrayOf(
-            Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED,
-            Manifest.permission.READ_MEDIA_IMAGES,
-        )
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> arrayOf(
-            Manifest.permission.READ_MEDIA_IMAGES
-        )
-        else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-    }
-    val requestPermissionLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.RequestMultiplePermissions(),
-            onResult = { permissions ->
-                if (permissions.all { it.value }) {
-                    albumLauncher.launch(imageAlbumIntent)
-                } else {
-                    Toast.makeText(context, "갤러리 권한을 허용해야 합니다", Toast.LENGTH_SHORT).show()
-                }
-            }
-        )
     if(isLandScape){
         Column(
             modifier = modifier.fillMaxHeight().padding(30.dp).background(
@@ -162,11 +133,7 @@ fun ContainerEditSheet(
                 onAddBtnClick = onAddBtnClick,
                 onColorPickerClick = onColorPickerClick,
                 onImagePickerClick = {
-                    if (galleryPermissions.all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
-                        albumLauncher.launch(imageAlbumIntent)
-                    } else {
-                        requestPermissionLauncher.launch(galleryPermissions)
-                    }
+                    albumLauncher.launch(arrayOf("image/*"))
                 },
                 onDeleteColor = onDeleteColor,
                 bgMode = bgMode,
@@ -195,11 +162,7 @@ fun ContainerEditSheet(
                 onAddBtnClick = onAddBtnClick,
                 onColorPickerClick = onColorPickerClick,
                 onImagePickerClick = {
-                    if (galleryPermissions.all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
-                        albumLauncher.launch(imageAlbumIntent)
-                    } else {
-                        requestPermissionLauncher.launch(galleryPermissions)
-                    }
+                    albumLauncher.launch(arrayOf("image/*"))
                 },
                 onDeleteColor = onDeleteColor,
                 bgMode = bgMode,

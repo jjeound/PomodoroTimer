@@ -606,7 +606,7 @@ fun TimerButtons(
     }
 }
 
-@Preview()
+@Preview
 @Composable
 fun PomodoroTimerContentPreview() {
     MyTheme {
