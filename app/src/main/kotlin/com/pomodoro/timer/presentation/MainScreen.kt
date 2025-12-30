@@ -207,6 +207,7 @@ fun MainScreenContent(
         if(isLandscape){
             Row(
                 modifier = Modifier.fillMaxSize().align(Alignment.Center),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 HorizontalPager(
                     modifier = Modifier.weight(1f)

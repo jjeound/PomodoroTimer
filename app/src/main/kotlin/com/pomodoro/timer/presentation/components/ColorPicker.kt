@@ -48,7 +48,7 @@ fun ColorPicker(
     var focusedColor by remember { mutableStateOf(Color.White) }
     Box(
         modifier = modifier.background(
-            color = CustomTheme.colors.textFieldContainer,
+            color = Color.White,
             shape = RoundedCornerShape(12.dp)
         ),
         contentAlignment = Alignment.Center
