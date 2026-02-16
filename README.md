@@ -1,4 +1,4 @@
-# 📚 Custome Pomodoro Timer
+# 📚 Custom Pomodoro Timer
 
 > 색상, 폰트, 크기, 배경 등 다양하게 커스텀할 수 있는 뽀모도로 타이머 앱
 
