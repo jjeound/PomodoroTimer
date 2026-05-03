@@ -6,16 +6,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pomodoro.timer.data.GoalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class PomodoroViewModel @Inject constructor(): ViewModel() {
+class PomodoroViewModel @Inject constructor(
+    private val goalRepository: GoalRepository,
+) : ViewModel() {
+
     var remainingTime by mutableIntStateOf(60 * 60)
         private set
     var state by mutableStateOf(TimerState.IDLE)
@@ -26,6 +32,12 @@ class PomodoroViewModel @Inject constructor(): ViewModel() {
         private set
     var tempRepeat by mutableIntStateOf(repeat)
         private set
+    var isGoalCompleted by mutableStateOf(false)
+        private set
+
+    val goalText = goalRepository.getGoal()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, "")
+
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
     private var timerJob: Job? = null
@@ -39,11 +51,20 @@ class PomodoroViewModel @Inject constructor(): ViewModel() {
         tempRepeat = repeat
     }
 
+    fun setGoal(text: String) {
+        viewModelScope.launch { goalRepository.saveGoal(text) }
+    }
+
+    fun onGoalComplete() {
+        isGoalCompleted = !isGoalCompleted
+    }
+
     fun onReset() {
         timerJob?.cancel()
         remainingTime = 60 * 60
         state = TimerState.IDLE
         tempRepeat = repeat
+        isGoalCompleted = false
     }
 
     fun onPause() {
@@ -56,6 +77,7 @@ class PomodoroViewModel @Inject constructor(): ViewModel() {
             onReset()
             return
         }
+        isGoalCompleted = false
         viewModelScope.launch {
             _eventFlow.emit(UiEvent.PlayStartSound)
         }
@@ -91,9 +113,9 @@ class PomodoroViewModel @Inject constructor(): ViewModel() {
     }
 }
 
-sealed interface UiEvent{
-    data object PlayStartSound: UiEvent
-    data object PlayBreakSound: UiEvent
+sealed interface UiEvent {
+    data object PlayStartSound : UiEvent
+    data object PlayBreakSound : UiEvent
 }
 
 enum class TimerState {

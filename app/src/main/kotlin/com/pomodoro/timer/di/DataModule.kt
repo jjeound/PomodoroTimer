@@ -1,5 +1,7 @@
 package com.pomodoro.timer.di
 
+import com.pomodoro.timer.data.GoalRepository
+import com.pomodoro.timer.data.GoalRepositoryImpl
 import com.pomodoro.timer.data.MainRepository
 import com.pomodoro.timer.data.MainRepositoryImpl
 import com.pomodoro.timer.data.OnboardingRepository
@@ -17,4 +19,7 @@ internal interface DataModule {
 
     @Binds
     fun bindsOnboardingRepository(onboardingRepositoryImpl: OnboardingRepositoryImpl): OnboardingRepository
+
+    @Binds
+    fun bindsGoalRepository(goalRepositoryImpl: GoalRepositoryImpl): GoalRepository
 }

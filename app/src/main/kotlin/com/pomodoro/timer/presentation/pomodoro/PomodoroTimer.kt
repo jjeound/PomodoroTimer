@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
@@ -67,6 +68,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
@@ -74,6 +76,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.pomodoro.timer.data.model.CustomWidget
 import com.pomodoro.timer.R
@@ -103,6 +106,8 @@ fun PomodoroTimer(
     viewModel.setBT(widget.breakTime)
     val remainingTime by remember { derivedStateOf { viewModel.remainingTime } }
     val state by remember { derivedStateOf { viewModel.state } }
+    val goalText by viewModel.goalText.collectAsStateWithLifecycle()
+    val isGoalCompleted by remember { derivedStateOf { viewModel.isGoalCompleted } }
     val minutesTxt = when(widget.gap){
         5 -> {
             listOf("15", "20", "25", "30", "35", "40", "45", "50", "55", "0", "5", "10")
@@ -230,6 +235,10 @@ fun PomodoroTimer(
         pagerEnabled = pagerEnabled,
         isLandscape = isLandscape,
         patterns = patterns,
+        goalText = goalText,
+        isGoalCompleted = isGoalCompleted,
+        onGoalTextChange = viewModel::setGoal,
+        onGoalComplete = viewModel::onGoalComplete,
     )
 }
 
@@ -254,6 +263,10 @@ fun PomodoroTimerContent(
     pagerEnabled: Boolean = false,
     isLandscape: Boolean,
     patterns: List<Int>,
+    goalText: String = "",
+    isGoalCompleted: Boolean = false,
+    onGoalTextChange: (String) -> Unit = {},
+    onGoalComplete: () -> Unit = {},
 ){
     val windowInfo = LocalWindowInfo.current
     val context = LocalContext.current
@@ -298,6 +311,19 @@ fun PomodoroTimerContent(
             } else Modifier
         )
     ){
+        if (!editMode) {
+            GoalRow(
+                goalText = goalText,
+                isGoalCompleted = isGoalCompleted,
+                state = state,
+                onGoalTextChange = onGoalTextChange,
+                onGoalComplete = onGoalComplete,
+                fontColor = widget.fontColor,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 16.dp),
+            )
+        }
         Box(
             modifier = Modifier.align(
                 if(editMode && !isLandscape) Alignment.TopCenter else Alignment.Center
@@ -639,5 +665,62 @@ fun PomodoroTimerContentPreview() {
 fun TimerButtonsPreview() {
     MyTheme {
         TimerButtons(state = TimerState.IDLE)
+    }
+}
+
+@Composable
+private fun GoalRow(
+    goalText: String,
+    isGoalCompleted: Boolean,
+    state: TimerState,
+    onGoalTextChange: (String) -> Unit,
+    onGoalComplete: () -> Unit,
+    fontColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    val canComplete = state == TimerState.IDLE && goalText.isNotBlank()
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 40.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        BasicTextField(
+            value = goalText,
+            onValueChange = onGoalTextChange,
+            modifier = Modifier.weight(1f),
+            textStyle = TextStyle(
+                color = fontColor,
+                fontSize = 16.sp,
+                textDecoration = if (isGoalCompleted) TextDecoration.LineThrough else TextDecoration.None,
+            ),
+            singleLine = true,
+            decorationBox = { innerTextField ->
+                if (goalText.isEmpty()) {
+                    Text(
+                        text = "목표를 입력하세요",
+                        style = TextStyle(
+                            color = fontColor.copy(alpha = 0.4f),
+                            fontSize = 16.sp,
+                        ),
+                    )
+                }
+                innerTextField()
+            },
+        )
+        IconButton(
+            onClick = onGoalComplete,
+            enabled = canComplete,
+            colors = IconButtonDefaults.iconButtonColors(
+                contentColor = if (isGoalCompleted) fontColor else fontColor.copy(alpha = 0.4f),
+                disabledContentColor = fontColor.copy(alpha = 0.2f),
+            ),
+        ) {
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.check),
+                contentDescription = if (isGoalCompleted) "완료 취소" else "완료",
+            )
+        }
     }
 }
