@@ -243,6 +243,7 @@ fun MainScreenContent(
                             showTextEditBottomSheet = false
                         },
                         showButtons = showButtons,
+                        onShowButtonsChange = onShowButtonsChange,
                         onDeleteWidget = onDeleteWidget,
                         showDelete = showDelete,
                         onShowDeleteChange = {
@@ -554,6 +555,7 @@ fun MainScreenContent(
                         showContainerEditBottomSheet = true
                     },
                     showButtons = showButtons,
+                    onShowButtonsChange = onShowButtonsChange,
                     onDeleteWidget = onDeleteWidget,
                     showDelete = showDelete,
                     onShowDeleteChange = { showDelete = it },

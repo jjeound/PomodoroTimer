@@ -17,6 +17,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -43,6 +44,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -94,6 +96,7 @@ fun PomodoroTimer(
     onEditText: () -> Unit,
     onEditContainer: () -> Unit,
     showButtons: Boolean,
+    onShowButtonsChange: () -> Unit = {},
     onDeleteWidget: () -> Unit,
     showDelete: Boolean,
     onShowDeleteChange: (Boolean) -> Unit,
@@ -239,6 +242,7 @@ fun PomodoroTimer(
         isGoalCompleted = isGoalCompleted,
         onGoalTextChange = viewModel::setGoal,
         onGoalComplete = viewModel::onGoalComplete,
+        onShowButtonsChange = onShowButtonsChange,
     )
 }
 
@@ -267,6 +271,7 @@ fun PomodoroTimerContent(
     isGoalCompleted: Boolean = false,
     onGoalTextChange: (String) -> Unit = {},
     onGoalComplete: () -> Unit = {},
+    onShowButtonsChange: () -> Unit = {},
 ){
     val windowInfo = LocalWindowInfo.current
     val context = LocalContext.current
@@ -311,17 +316,18 @@ fun PomodoroTimerContent(
             } else Modifier
         )
     ){
-        if (!editMode) {
-            GoalRow(
+        if (!editMode && showButtons) {
+            GoalDisplay(
                 goalText = goalText,
                 isGoalCompleted = isGoalCompleted,
                 state = state,
                 onGoalTextChange = onGoalTextChange,
                 onGoalComplete = onGoalComplete,
+                onShowButtonsChange = onShowButtonsChange,
                 fontColor = widget.fontColor,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = 16.dp),
+                    .padding(top = 24.dp),
             )
         }
         Box(
@@ -669,57 +675,94 @@ fun TimerButtonsPreview() {
 }
 
 @Composable
-private fun GoalRow(
+private fun GoalDisplay(
     goalText: String,
     isGoalCompleted: Boolean,
     state: TimerState,
     onGoalTextChange: (String) -> Unit,
     onGoalComplete: () -> Unit,
+    onShowButtonsChange: () -> Unit,
     fontColor: Color,
     modifier: Modifier = Modifier,
 ) {
+    var showDialog by remember { mutableStateOf(false) }
     val canComplete = state == TimerState.IDLE && goalText.isNotBlank()
+
+    if (showDialog) {
+        var input by remember { mutableStateOf(goalText) }
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("목표 설정", color = fontColor) },
+            text = {
+                BasicTextField(
+                    value = input,
+                    onValueChange = { input = it },
+                    textStyle = TextStyle(color = fontColor, fontSize = 16.sp),
+                    singleLine = true,
+                    decorationBox = { innerTextField ->
+                    if (input.isEmpty()) {
+                        Text("목표를 입력하세요", color = fontColor.copy(alpha = 0.4f), fontSize = 16.sp)
+                    }
+                    innerTextField()
+                },
+                )
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = { onGoalTextChange(input); showDialog = false }) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { showDialog = false }) {
+                    Text("취소")
+                }
+            },
+        )
+    }
+
     Row(
         modifier = modifier
-            .fillMaxWidth()
+            .combinedClickable(
+                onClick = { showDialog = true },
+                onDoubleClick = onShowButtonsChange,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+            )
             .padding(horizontal = 40.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
-        BasicTextField(
-            value = goalText,
-            onValueChange = onGoalTextChange,
-            modifier = Modifier.weight(1f),
-            textStyle = TextStyle(
-                color = fontColor,
-                fontSize = 16.sp,
-                textDecoration = if (isGoalCompleted) TextDecoration.LineThrough else TextDecoration.None,
-            ),
-            singleLine = true,
-            decorationBox = { innerTextField ->
-                if (goalText.isEmpty()) {
-                    Text(
-                        text = "목표를 입력하세요",
-                        style = TextStyle(
-                            color = fontColor.copy(alpha = 0.4f),
-                            fontSize = 16.sp,
-                        ),
+        if (goalText.isNotBlank()) {
+            Text(
+                text = goalText,
+                style = TextStyle(
+                    color = fontColor,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    textDecoration = if (isGoalCompleted) TextDecoration.LineThrough else TextDecoration.None,
+                ),
+            )
+            if (canComplete || isGoalCompleted) {
+                IconButton(
+                    onClick = onGoalComplete,
+                    modifier = Modifier.size(36.dp),
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = if (isGoalCompleted) fontColor else fontColor.copy(alpha = 0.5f),
+                    ),
+                ) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(R.drawable.check),
+                        contentDescription = if (isGoalCompleted) "완료 취소" else "완료",
                     )
                 }
-                innerTextField()
-            },
-        )
-        IconButton(
-            onClick = onGoalComplete,
-            enabled = canComplete,
-            colors = IconButtonDefaults.iconButtonColors(
-                contentColor = if (isGoalCompleted) fontColor else fontColor.copy(alpha = 0.4f),
-                disabledContentColor = fontColor.copy(alpha = 0.2f),
-            ),
-        ) {
-            Icon(
-                imageVector = ImageVector.vectorResource(R.drawable.check),
-                contentDescription = if (isGoalCompleted) "완료 취소" else "완료",
+            }
+        } else {
+            Text(
+                text = "+ 목표 추가",
+                style = TextStyle(
+                    color = fontColor.copy(alpha = 0.45f),
+                    fontSize = 16.sp,
+                ),
             )
         }
     }
