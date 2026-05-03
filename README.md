@@ -1,4 +1,4 @@
-# 📚 Custome Pomodoro Timer
+# 📚 Custom Pomodoro Timer
 
 > 색상, 폰트, 크기, 배경 등 다양하게 커스텀할 수 있는 뽀모도로 타이머 앱
 
@@ -23,8 +23,8 @@
 
 ## 🖼 Preview
 
-<img width="525" height="1107" alt="Image" src="https://velog.velcdn.com/images/wjdwlsdl321/post/5b321525-5ac5-4ac4-88b6-d04cc19be5a9/image.png" />
-<img width="525" height="1107" alt="Image" src="https://velog.velcdn.com/images/wjdwlsdl321/post/b02ed713-f18d-48e2-b29b-44d82cf3bfd6/image.png" />
+<img width="1200" height="600" alt="Image" src="https://velog.velcdn.com/images/wjdwlsdl321/post/5b321525-5ac5-4ac4-88b6-d04cc19be5a9/image.png" />
+<img width="1200" height="600" alt="Image" src="https://velog.velcdn.com/images/wjdwlsdl321/post/b02ed713-f18d-48e2-b29b-44d82cf3bfd6/image.png" />
 
 ---
 

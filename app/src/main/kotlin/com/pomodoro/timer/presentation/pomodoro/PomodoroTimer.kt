@@ -7,7 +7,10 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.view.WindowManager
 import android.widget.Toast
+import androidx.activity.compose.LocalActivity
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -115,6 +118,7 @@ fun PomodoroTimer(
         }
     }
     val context = LocalContext.current
+    val activity = LocalActivity.current
     val vibrator = remember {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibManager = context.getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager
@@ -127,11 +131,23 @@ fun PomodoroTimer(
     val vibrationEffect: (Long, Int) -> VibrationEffect = { duration, amplitude ->
         VibrationEffect.createOneShot(duration, amplitude)
     }
-    val mediaPlayer = listOf(MediaPlayer.create(context, widget.startSound), MediaPlayer.create(context, widget.breakTimeSound))
+    val mediaPlayers = remember {
+        listOf(
+            MediaPlayer.create(context, widget.startSound),
+            MediaPlayer.create(context, widget.breakTimeSound)
+        )
+    }
     DisposableEffect(Unit) {
         onDispose {
-            mediaPlayer.forEach {
-                it.release()
+            mediaPlayers.forEach { player ->
+                try {
+                    if (player != null) {
+                        player.stop()
+                        player.release()
+                    }
+                } catch (e: Exception) {
+                    throw e
+                }
             }
         }
     }
@@ -142,12 +158,20 @@ fun PomodoroTimer(
     }
     LaunchedEffect(state) {
         if(state == TimerState.PAUSED || state == TimerState.IDLE){
-            mediaPlayer.forEach {
+            mediaPlayers.forEach {
                 if (it.isPlaying) {
                     it.stop()
                     it.prepare()
                 }
             }
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else if(state == TimerState.RUNNING){
+            activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
     }
     LaunchedEffect(Unit) {
@@ -156,7 +180,7 @@ fun PomodoroTimer(
                 is UiEvent.PlayStartSound -> {
                     when(widget.soundMode){
                         SoundMode.SOUND -> {
-                            mediaPlayer[0].start()
+                            mediaPlayers[0].start()
                         }
                         SoundMode.VIBRATE -> {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
@@ -171,7 +195,7 @@ fun PomodoroTimer(
                 is UiEvent.PlayBreakSound -> {
                     when(widget.soundMode){
                         SoundMode.SOUND -> {
-                            mediaPlayer[1].start()
+                            mediaPlayers[1].start()
                         }
                         SoundMode.VIBRATE -> {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
@@ -544,66 +568,55 @@ fun TimerButtons(
     onPause: () -> Unit = {},
     onReset: () -> Unit = {},
     onResume: () -> Unit = {},
-){
+) {
+
+    val (buttonText, action) = when (state) {
+        TimerState.IDLE -> R.string.start to onStart
+        TimerState.RUNNING -> R.string.pause to onPause
+        TimerState.PAUSED -> R.string.resume to onResume
+        TimerState.BREAK -> R.string.start to onStart
+    }
+
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
+
         ElevatedButton(
             onClick = onReset,
             modifier = Modifier
                 .padding(vertical = 5.dp, horizontal = 10.dp)
                 .clip(RoundedCornerShape(12.dp)),
             colors = ButtonDefaults.elevatedButtonColors(
-                containerColor = CustomTheme.colors.surface,
+                containerColor = CustomTheme.colors.surface
             )
         ) {
-            Text(
-                text = stringResource(id = R.string.reset),
-                color = CustomTheme.colors.text,
-                style = CustomTheme.typography.buttonTimerSmall
-            )
+            TimerButtonText(R.string.reset)
         }
+
         ElevatedButton(
-            onClick = {
-                when(state){
-                    TimerState.IDLE -> onStart()
-                    TimerState.RUNNING -> onPause()
-                    TimerState.PAUSED -> onResume()
-                    TimerState.BREAK -> onStart()
-                }
-            },
+            onClick = action,
             modifier = Modifier
                 .padding(vertical = 5.dp, horizontal = 10.dp)
                 .clip(RoundedCornerShape(12.dp)),
             colors = ButtonDefaults.elevatedButtonColors(
-                containerColor = CustomTheme.colors.surface,
+                containerColor = CustomTheme.colors.surface
             ),
         ) {
-            when(state){
-                TimerState.IDLE -> Text(
-                    text = stringResource(id = R.string.start),
-                    color = CustomTheme.colors.text,
-                    style = CustomTheme.typography.buttonTimerSmall
-                )
-                TimerState.RUNNING -> Text(
-                    text = stringResource(id = R.string.pause),
-                    color = CustomTheme.colors.text,
-                    style = CustomTheme.typography.buttonTimerSmall
-                )
-                TimerState.PAUSED -> Text(
-                    text = stringResource(id = R.string.resume),
-                    color = CustomTheme.colors.text,
-                    style = CustomTheme.typography.buttonTimerSmall
-                )
-                TimerState.BREAK -> Text(
-                    text = stringResource(id = R.string.start),
-                    color = CustomTheme.colors.text,
-                    style = CustomTheme.typography.buttonTimerSmall
-                )
-            }
+            TimerButtonText(buttonText)
         }
     }
+}
+
+@Composable
+private fun TimerButtonText(@StringRes res: Int) {
+    Text(
+        text = stringResource(id = res),
+        color = CustomTheme.colors.text,
+        style = CustomTheme.typography.buttonTimerSmall
+    )
 }
 
 @Preview
