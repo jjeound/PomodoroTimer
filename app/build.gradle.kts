@@ -11,17 +11,17 @@ plugins {
 
 android {
     namespace = "com.pomodoro.timer"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.jje.timer"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
         val autoVersionCode = project.findProperty("versionCode")?.toString()?.toInt() ?: 6
         versionCode = autoVersionCode
         versionName = "1.0.${autoVersionCode}"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.pomodoro.timer.HiltTestRunner"
     }
 
     signingConfigs {
@@ -133,10 +133,15 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.androidx.room.testing)
+    kspAndroidTest(libs.hilt.compiler)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
