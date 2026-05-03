@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.2"
+agp = "9.2.0"
 coilCompose = "2.7.0"
 coilSvg = "2.7.0"
 converterGson = "3.0.0"
@@ -29,6 +29,8 @@ material3AdaptiveNavigationSuite = "1.4.0"
 material3WindowSizeClass = "1.4.0"
 colorpicker = "1.1.2"
 lottieVersion = "6.6.6"
+coroutinesTest = "1.9.0"
+turbine = "1.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -70,6 +72,10 @@ androidx-material3-adaptive-navigation-suite = { module = "androidx.compose.mate
 androidx-material3-window-size-class1 = { module = "androidx.compose.material3:material3-window-size-class", version.ref = "material3WindowSizeClass" }
 compose-colorpicker = { module = "com.github.skydoves:colorpicker-compose", version.ref = "colorpicker" }
 lottie = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieVersion" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hiltAndroid" }
+androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "roomKtx" }
 
 
 
@@ -77,6 +83,6 @@ lottie = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieVe
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-ksp = { id = "com.google.devtools.ksp", version = "2.2.20-2.0.4" }
+ksp = { id = "com.google.devtools.ksp", version = "2.3.2" }
 dagger-hilt = { id = "com.google.dagger.hilt.android", version = "2.57.2" }
 
